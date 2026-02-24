@@ -14,8 +14,8 @@
 			"description": "Development server"
 		},
 		{
-			"url": "https://your-app-name.onrender.com",
-			"description": "Production server (update this URL after deployment)"
+			"url": "https://shareameal-vw7s.onrender.com",
+			"description": "Production server (live)"
 		}
 	],
 	"components": {
