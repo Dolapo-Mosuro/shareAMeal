@@ -49,7 +49,6 @@ test-results.txt
 test-*.txt
 
 # Generated HTML/temporary files (except intentional docs)
-*.html
 !docs/**/*.html
 
 # Temporary Claude/AI folders
