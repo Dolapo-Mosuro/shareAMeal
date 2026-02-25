@@ -1,159 +1,278 @@
-# share-a-meal
-Group 53 wtf capstone project
+# ShareAMeal v2.0.0 - Full Stack App
 
 Trust-first coordination engine for verified food sharing between SMEs, NGOs, sponsors, and admins.
 
-## Stack
+## 📁 Project Structure (Monorepo)
 
-- Node.js + Express
-- MySQL
+```
+shareAMeal/
+├── backend/           # Node.js + Express API
+│   ├── db/           # Database migrations & seeds
+│   ├── src/          # API controllers, routes, middleware
+│   ├── tests/        # Jest test suites (123 tests passing)
+│   ├── scripts/      # Database migration scripts
+│   ├── docs/         # Documentation & guides
+│   ├── package.json  # Backend dependencies
+│   ├── .env          # Backend environment config
+│   └── Dockerfile    # Docker container config
+│
+├── frontend/          # React + Vite UI
+│   ├── src/          # React components, pages, theme
+│   ├── public/       # Static assets
+│   ├── package.json  # Frontend dependencies
+│   ├── .env          # Frontend environment config
+│   ├── vite.config.js # Vite build config
+│   └── index.html    # HTML entry point
+│
+├── LICENSE
+├── .gitignore
+└── README.md         # This file
+```
 
-## Quick Start
+## 🚀 Quick Start
 
-1. Install dependencies:
+### 1. Install Dependencies
+
+**Backend:**
 
 ```bash
+cd backend
 npm install
 ```
 
-1. Create and configure `.env` (example):
+**Frontend:**
 
-```env
+```bash
+cd frontend
+npm install
+```
+
+### 2. Configure Environment
+
+**Backend (.env already exists):**
+
+```
 PORT=3000
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_mysql_password
+DB_PASSWORD=YOUR PASSWORD
 DB_NAME=sharemeal
-JWT_SECRET=your_secret
-JWT_EXPIRES_IN=24h
-ADMIN_SECRET=your_admin_secret
-SERVICE_TOKEN=your_service_token
+JWT_SECRET=<your-secret>
+ADMIN_SECRET=<your-secret>
+SERVICE_TOKEN=<your-token>
 ```
 
-1. Create the database and tables:
+**Frontend (.env already exists):**
 
-- Use [db/shareMeal.sql](db/shareMeal.sql)
+```
+VITE_API_URL=http://localhost:3000
+```
 
-1. Run the server:
+### 3. Start Database (Docker)
 
 ```bash
-npm run dev
+cd backend
+docker-compose up -d
 ```
 
-## API Overview
+### 4. Start Backend & Frontend
 
-- Auth: `/auth/register`, `/auth/login`
-- Admin: `/admin/users`, `/admin/users/pending`, `/admin/verify/:userId`, `/admin/revoke/:userId`
-- Meals: `/meals`, `/meals/:mealId`, `/meals/status/:status`, `/meals/my/list`
-- Claims: `/claims/meal/:mealId`, `/claims/my`, `/claims/:claimId/cancel`, `/claims/meal/:mealId/ready`, `/claims/:claimId/pickup`, `/claims/:claimId/complete`
-- AI: `/ai/meals`, `/ai/meal/:mealId`, `/ai/meal/:mealId/expiry`, `/ai/meal/:mealId/food-status`
-- Metrics: `/metrics`, `/metrics/smes`, `/metrics/ngos`, `/metrics/status`, `/metrics/timeline`, `/metrics/completion-time`
+**Terminal 1 - Backend:**
 
-## Manual Test Cases
+```bash
+cd backend
+npm run dev    # Runs on http://localhost:3000
+```
 
-Use a REST client (Postman/Insomnia) or curl. Replace `:PORT` with your server port (default 3000).
+**Terminal 2 - Frontend:**
 
-### 1) Auth
+```bash
+cd frontend
+npm run dev    # Runs on http://localhost:5173
+```
 
-- Register admin
-  - `POST http://localhost:3000/admin/auth/register`
-  - Body:
+### 5. Access the App
 
-    ```json
-    {
-    	"name": "Admin User",
-    	"email": "admin@test.com",
-    	"password": "Admin123!",
-    	"admin_secret": "your_admin_secret"
-    }
-    ```
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:3000
+- **API Docs:** http://localhost:3000/api-docs
 
-- Login
-  - `POST http://localhost:3000/admin/auth/login`
-  - Body:
+## 📚 API Endpoints
 
-    ```json
-    { "email": "admin@test.com", "password": "Admin123!" }
-    ```
+### Auth
 
-### 2) Admin Verification
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login user
 
-- Get pending users
-  - `GET http://localhost:3000/admin/users/pending`
-  - Header: `Authorization: Bearer <ADMIN_JWT>`
-- Verify user
-  - `PATCH http://localhost:3000/admin/verify/:userId`
-  - Header: `Authorization: Bearer <ADMIN_JWT>`
+### Admin
 
-### 3) Meals (SME)
+- `GET /admin/users/pending` - List pending users (Admin only)
+- `PATCH /admin/verify/:userId` - Verify user (Admin only)
 
-- Create meal
-  - `POST http://localhost:3000/meals`
-  - Header: `Authorization: Bearer <SME_JWT>`
-  - Body:
+### Meals (SME)
 
-    ```json
-    {
-    	"title": "Fresh Bread Loaves",
-    	"description": "Whole wheat bread baked this morning",
-    	"quantity": 20,
-    	"unit": "loaves",
-    	"storage_type": "Room Temperature",
-    	"food_type": "Bread",
-    	"food_status": "Fresh",
-    	"prepared_at": "2026-02-20 08:00:00"
-    }
-    ```
+- `POST /meals` - Create meal
+- `GET /meals` - Get all meals
+- `GET /meals/:mealId` - Get meal details
+- `PATCH /meals/:mealId` - Update meal
+- `DELETE /meals/:mealId` - Delete meal
 
-- Get all meals
-  - `GET http://localhost:3000/meals`
-- Get meal by ID
-  - `GET http://localhost:3000/meals/:mealId`
+### Claims (NGO)
 
-### 4) Claims (NGO)
+- `POST /claims/meal/:mealId` - Claim meal
+- `GET /claims/my` - Get my claims
+- `PATCH /claims/:claimId/pickup` - Confirm pickup
+- `PATCH /claims/:claimId/complete` - Complete claim
 
-- Claim meal
-  - `POST http://localhost:3000/claims/meal/:mealId`
-  - Header: `Authorization: Bearer <NGO_JWT>`
-- Mark pickup ready (SME)
-  - `PATCH http://localhost:3000/claims/meal/:mealId/ready`
-  - Header: `Authorization: Bearer <SME_JWT>`
-- Confirm pickup (NGO)
-  - `PATCH http://localhost:3000/claims/:claimId/pickup`
-  - Header: `Authorization: Bearer <NGO_JWT>`
-- Confirm completion (NGO)
-  - `PATCH http://localhost:3000/claims/:claimId/complete`
-  - Header: `Authorization: Bearer <NGO_JWT>`
+### Sponsorships
 
-### 5) AI (Service Token)
+- `POST /sponsorships` - Create sponsorship
+- `GET /sponsorships/my` - Get my sponsorships
+- `GET /sponsorships/impact` - Get impact metrics
 
-- Get meals for processing
-  - `GET http://localhost:3000/ai/meals`
-  - Header: `Authorization: Bearer <SERVICE_TOKEN>`
-- Set expiry
-  - `POST http://localhost:3000/ai/meal/:mealId/expiry`
-  - Header: `Authorization: Bearer <SERVICE_TOKEN>`
-  - Body: `{ "expiry_at": "2026-02-21 08:00:00" }`
-- Update food status
-  - `PATCH http://localhost:3000/ai/meal/:mealId/food-status`
-  - Header: `Authorization: Bearer <SERVICE_TOKEN>`
-  - Body: `{ "food_status": "Moderate" }`
+### Metrics
 
-### 6) Metrics
+- `GET /metrics` - Overall metrics
+- `GET /metrics/status` - Status breakdown
+- `GET /metrics/timeline` - Timeline view
 
-- Overall metrics
-  - `GET http://localhost:3000/metrics`
-- Status breakdown
-  - `GET http://localhost:3000/metrics/status`
-- Timeline
-  - `GET http://localhost:3000/metrics/timeline`
-- Completion time
-  - `GET http://localhost:3000/metrics/completion-time`
+### AI (Service)
 
-## Background Guards
+- `GET /ai/meals` - Get meals for processing
+- `POST /ai/meal/:mealId/expiry` - Set meal expiry
+- `PATCH /ai/meal/:mealId/food-status` - Update food status
 
-- Auto-expire meals when `expiry_at` has passed
-- Auto-cancel claims after 30 minutes without pickup
-- Auto-cancel meals stuck in `PICKUP_READY` for over 2 hours
+## 🧪 Testing
 
-Guards run on startup and every 5 minutes from [src/jobs/mealGuards.js](src/jobs/mealGuards.js).
+**Backend:**
+
+```bash
+cd backend
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+npm run test:coverage # Coverage report
+```
+
+**Frontend:**
+
+```bash
+cd frontend
+npm test              # Run tests
+```
+
+## 🐳 Docker (Backend Only)
+
+The backend includes Docker setup for local development:
+
+```bash
+cd backend
+
+# Start MySQL in Docker
+docker-compose up -d
+
+# Stop MySQL
+docker-compose down
+```
+
+## 📦 Build for Production
+
+**Backend:**
+
+```bash
+cd backend
+npm run migrate  # Run migrations
+npm start        # Start production server
+```
+
+**Frontend:**
+
+```bash
+cd frontend
+npm run build    # Build for production (creates dist/)
+npm run preview  # Preview production build
+```
+
+## 🔐 Security Notes
+
+- ✅ JWT authentication implemented
+- ✅ Role-based access control (RBAC)
+- ✅ Password hashing with bcryptjs
+- ✅ Rate limiting configured
+- ✅ CORS protection enabled
+- ⚠️ Never commit `.env` files with real secrets
+- ⚠️ Use environment-specific credentials
+
+## 📊 Tech Stack
+
+**Backend:**
+
+- Node.js 18+
+- Express 5.2
+- MySQL 8.0+
+- JWT authentication
+- Jest testing framework
+
+**Frontend:**
+
+- React 19
+- Vite build tool
+- React Router for navigation
+- React Hook Form for forms
+- React Icons for icons
+- Leaflet for maps
+- Vitest for testing
+
+## 📖 Documentation
+
+See `/backend/docs/` for detailed guides:
+
+- `BACKEND_COMPLETION_SUMMARY.md` - What's been completed
+- `TEAM_COORDINATION_CHECKLIST.md` - Team tasks
+- `RENDER_DEPLOYMENT_GUIDE.md` - Deployment instructions
+- `RAILWAY_DEPLOYMENT_GUIDE.md` - Alternative deployment
+
+## 🚀 Deployment
+
+### Option 1: Render (Recommended)
+
+1. Push to GitHub
+2. Connect Render to repo
+3. Set environment variables
+4. Deploy
+
+See `backend/docs/RENDER_DEPLOYMENT_GUIDE.md`
+
+### Option 2: Railway
+
+1. Connect GitHub repo
+2. Use `railway.json` configuration
+3. Set secrets in Railway dashboard
+
+See `backend/railway.json`
+
+### Option 3: Self-Hosted
+
+Deploy both backend and frontend on your own servers.
+
+## 🤝 Contributing
+
+1. Create feature branch from `main`
+2. Make changes
+3. Test backend: `npm test` (in backend/)
+4. Test frontend: `npm test` (in frontend/)
+5. Push to GitHub
+6. Create Pull Request
+
+## 📝 License
+
+MIT License - See LICENSE file
+
+## 👥 Contributors
+
+- Hope Haruna (@HopeHaruna)
+- Dolapo Mosuro (@Dolapo-Mosuro)
+- @nakayizakevina
+
+---
+
+**Status:** ✅ Backend: Production Ready (v2.0.0) | 🚀 Frontend: In Development
