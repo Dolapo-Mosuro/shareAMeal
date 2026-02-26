@@ -74,3 +74,6 @@ ecosystem.config.js
 *.pkl
 food_status_model.pkl
 backend/ml/*.pkl
+
+
+*docs
