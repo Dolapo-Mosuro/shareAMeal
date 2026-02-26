@@ -5,29 +5,5 @@
 	"env": {
 		"VITE_API_URL": "@vite_api_url"
 	},
-	"enviroments": {
-		"production": {
-			"domains": ["sharemeal.com", "sharemeal-app.com"],
-			"env": {
-				"VITE_API_URL": "@vite_api_url_prod"
-			}
-		}
-	},
-	"headers": [
-		{
-			"source": "/api/:path*",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "no-cache, no-store, must-revalidate"
-				}
-			]
-		}
-	],
-	"redirects": [
-		{
-			"source": "/api/:path*",
-			"destination": "${VITE_API_URL}/api/:path*"
-		}
-	]
+	
 }
