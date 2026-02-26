@@ -2,8 +2,9 @@ services:
   # ShareAMeal Backend API
   - type: web
     name: shareameal-api
-    env: node
+    runtime: node
     plan: free
+    rootDir: backend
     buildCommand: npm ci --only=production
     startCommand: npm run migrate && npm start
     healthCheckPath: /api/health
