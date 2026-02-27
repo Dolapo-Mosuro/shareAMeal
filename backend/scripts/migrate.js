@@ -26,6 +26,7 @@ async function runMigration() {
 			config.ssl = {
 				rejectUnauthorized: true,
 			};
+			!!process.env.DB_CA_CERT);
 
 			if (process.env.DB_CA_CERT) {
 				config.ssl.ca = process.env.DB_CA_CERT;
@@ -37,6 +38,7 @@ async function runMigration() {
 			}
 		}
 
+		// ✅ Create connection FIRST
 		connection = await mysql.createConnection(config);
 
 		console.log(
@@ -44,6 +46,10 @@ async function runMigration() {
 				(process.env.DB_SSL === "true" ? "enabled" : "disabled") +
 				")",
 		);
+
+		// ✅ Now we can query
+		const [rows] = await connection.query("SELECT DATABASE() as db");
+		console.log("Current database after connection:", rows[0].db);
 
 		const dbName = process.env.DB_NAME || "sharemeal";
 		console.log(`📦 Creating database '${dbName}' if not exists...`);
@@ -75,7 +81,11 @@ async function runMigration() {
 				}
 			}
 		}
-
+const [tables] = await connection.query("SHOW TABLES");
+console.log(
+	"📋 Tables in current database:",
+	tables.map((row) => Object.values(row)[0]),
+);
 		console.log("✅ Database schema migration completed successfully!");
 		process.exit(0);
 	} catch (error) {
