@@ -71,6 +71,15 @@ if (process.env.NODE_ENV !== "production") {
 app.get("/", (req, res) => {
 	res.json({ message: "Share-a-Meal API is running." });
 });
+app.get("/test-db", async (req, res) => {
+	try {
+		const [rows] = await pool.query("SELECT 1+1 AS result");
+		res.json({ success: true, data: rows });
+	} catch (err) {
+		console.error("DB test error:", err);
+		res.status(500).json({ error: err.message, code: err.code });
+	}
+});
 
 /**
  * Optional DB health endpoint (Not every request)
