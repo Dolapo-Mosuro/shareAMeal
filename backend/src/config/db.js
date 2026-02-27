@@ -22,4 +22,6 @@ const pool = mysql.createPool({
 	}),
 });
 
+console.log("✅ Database pool created with host:", process.env.DB_HOST);
+
 module.exports = pool;

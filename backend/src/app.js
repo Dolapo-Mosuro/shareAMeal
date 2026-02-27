@@ -1,5 +1,6 @@
 const express = require("express");
 require("dotenv").config();
+console.log("🔍 App DB_NAME:", process.env.DB_NAME);
 const helmet = require("helmet");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
@@ -22,7 +23,7 @@ const claimRoutes = require("./routes/claimRoutes");
 const sponsorshipRoutes = require("./routes/sponsorshipRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const metricsRoutes = require("./routes/metricsRoutes");
-
+const pool = require("./config/db");
 // Initialize Express app
 const app = express();
 
@@ -51,7 +52,6 @@ app.use(corsMiddleware);
  * Body parsing
  */
 app.use(express.json());
-
 /**
  * Global Security Middleware
  */
