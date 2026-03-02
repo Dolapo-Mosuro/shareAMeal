@@ -2,8 +2,9 @@ const cors = require("cors");
 
 module.exports = () =>
 	cors({
-		origin: "*", // Allow all origins for now (fix specific origins in production)
-		credentials: false,
-		methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-		allowedHeaders: "Content-Type, Authorization",
+		origin: true, // Reflect the request origin
+		credentials: true,
+		methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization"],
+		optionsSuccessStatus: 200,
 	});

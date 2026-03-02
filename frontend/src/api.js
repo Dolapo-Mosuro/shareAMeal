@@ -12,7 +12,6 @@ export async function apiRequest(endpoint, options = {}) {
 	const config = {
 		...options,
 		headers: defaultHeaders,
-		credentials: "include", // for cookies/auth if needed
 	};
 	const response = await fetch(url, config);
 	if (!response.ok) {
