@@ -4,10 +4,10 @@ services:
     runtime: node
     region: oregon
     rootDir: backend
-    buildCommand: npm install
+    buildCommand: npm ci --only=production
     startCommand: npm start
     autoDeployTrigger: commit
-    healthCheckPath: /
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
@@ -22,7 +22,7 @@ services:
       - key: DB_PASSWORD
         sync: false
       - key: DB_NAME
-        value: sharemeal
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: ADMIN_SECRET
