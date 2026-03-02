@@ -49,10 +49,10 @@ app.use(
 );
 
 /**
- * CORS (Must come early)
+ * CORS (Disabled for testing)
  */
-const corsMiddleware = require("./config/cors")();
-app.use(corsMiddleware);
+// const corsMiddleware = require("./config/cors")();
+// app.use(corsMiddleware);
 
 /**
  * Body parsing
