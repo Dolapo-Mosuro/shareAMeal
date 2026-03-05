@@ -111,12 +111,14 @@ test-integration.ps1
 *.ipynb
 .ipynb_checkpoints/
 
-# Python cache
+# Python cache and ML experimentation files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+*.py
+!backend/**/*.py
 
 # Development utilities (keep useful scripts tracked)
 # generate-swagger-spec.js is kept in repo
