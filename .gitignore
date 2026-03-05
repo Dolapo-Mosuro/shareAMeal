@@ -3,6 +3,10 @@
 .env.local
 .env.*.local
 .env.test
+backend/.env
+frontend/.env
+backend/.env.local
+frontend/.env.local
 
 # Dependencies
 node_modules/
@@ -14,12 +18,16 @@ pnpm-debug.log*
 
 # IDE and Editor
 .vscode/
+.vscode/settings.json
+.vscode/launch.json
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
 Thumbs.db
+*.sublime-workspace
+*.sublime-project
 
 # OS files
 .AppleDouble
@@ -30,25 +38,27 @@ dist/
 build/
 *.tsbuildinfo
 
-# Testing - test files and outputs
+# Testing - test outputs only (not test source files)
 coverage/
 .nyc_output/
-tests/
-**/tests/
 test-output.txt
 test-results.txt
 test_output.txt
 full_test_output.txt
 test-*.txt
-jest.setup.js
-*.test.js
-*.spec.js
+*.lcov
 
-# Temporary files
+# Temporary files and logs
 *.tmp
 *.log
 temp/
 .cache/
+tmp/
+*.swp
+*.swo
+*~
+*.bak
+*.backup
 
 # Generated HTML/temporary files
 !docs/**/*.html
@@ -85,13 +95,15 @@ EMAIL_VERIFICATION.md
 */docs
 docs/
 
-# Development/Testing Scripts
-*.ps1
-test-*.sh
-check-*.sh
+# Development/Testing Scripts (specific, not all .ps1)
+check-deployment.ps1
+deploy-render.ps1
 deploy-*.ps1
 setup-*.ps1
+setup-admin.ps1
 view-*.ps1
+test-*.sh
+check-*.sh
 
 # Jupyter notebooks (ML/data analysis)
 *.ipynb
@@ -109,3 +121,19 @@ generate-swagger-spec.js
 
 # Vercel
 .vercel
+
+# Temporary directories
+/tmp/
+/temp/
+.turbo/
+.next/
+
+# Lock files for development only (keep package-lock.json and yarn.lock checked in)
+# If making a library, consider uncommenting:
+# package-lock.json
+# yarn.lock
+
+# OS temporary files
+*.DS_Store
+*.exe
+*.dll
