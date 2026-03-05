@@ -38,6 +38,8 @@ export default defineConfig([
         afterEach: 'readonly',
         beforeAll: 'readonly',
         afterAll: 'readonly',
+        global: 'readonly',
+        vi: 'readonly',
       },
     },
   },
