@@ -216,7 +216,7 @@ jobs:
       - name: Pre-deployment health check
         run: |
           echo "🔍 Checking current deployment..."
-          curl -s https://shareameal-api.onrender.com/health || echo "ℹ️ Current deployment not accessible (may be starting)"
+          curl -s https://shareameal-api.onrender.com/ || echo "ℹ️ Current deployment not accessible (may be starting)"
 
       - name: Trigger Render Deploy
         id: render_deploy
@@ -251,7 +251,7 @@ jobs:
           echo "🔍 Checking deployment health..."
           MAX_ATTEMPTS=12
           ATTEMPT=0
-          HEALTH_CHECK_URL="https://shareameal-api.onrender.com/health"
+          HEALTH_CHECK_URL="https://shareameal-api.onrender.com/"
           
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             ATTEMPT=$((ATTEMPT + 1))
