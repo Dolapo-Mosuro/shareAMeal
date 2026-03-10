@@ -6,6 +6,36 @@ const path = require("path");
 
 require("dotenv").config();
 
+async function ensureUsersVerificationColumns(connection) {
+	const [columns] = await connection.query(
+		`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'`,
+	);
+
+	const existing = new Set(columns.map((row) => row.COLUMN_NAME));
+	const alterParts = [];
+
+	if (!existing.has("is_verified")) {
+		alterParts.push("ADD COLUMN is_verified BOOLEAN DEFAULT FALSE");
+	}
+
+	if (!existing.has("verification_token")) {
+		alterParts.push("ADD COLUMN verification_token VARCHAR(255)");
+	}
+
+	if (!existing.has("verification_token_expires")) {
+		alterParts.push("ADD COLUMN verification_token_expires DATETIME");
+	}
+
+	if (alterParts.length === 0) {
+		console.log("✅ users table already has verification columns");
+		return;
+	}
+
+	const alterSql = `ALTER TABLE users ${alterParts.join(", ")}`;
+	await connection.query(alterSql);
+	console.log("🛠️ Added missing verification columns to users table");
+}
+
 async function runMigration() {
 	let connection;
 
@@ -79,6 +109,10 @@ async function runMigration() {
 				}
 			}
 		}
+
+		// Backfill verification columns when deploying to existing databases.
+		await ensureUsersVerificationColumns(connection);
+
 		const [tables] = await connection.query("SHOW TABLES");
 		console.log(
 			"📋 Tables in current database:",
