@@ -84,6 +84,18 @@ async function runMigration() {
 			"📋 Tables in current database:",
 			tables.map((row) => Object.values(row)[0]),
 		);
+		
+		// Show user verification stats
+		const [users] = await connection.query(
+			"SELECT id, email, role, is_verified FROM users ORDER BY id DESC LIMIT 5"
+		);
+		console.log("👥 Recent users:", users);
+		
+		const [stats] = await connection.query(
+			"SELECT COUNT(*) as total, SUM(is_verified) as verified, SUM(!is_verified) as unverified FROM users"
+		);
+		console.log("📊 User stats:", stats[0]);
+		
 		console.log("✅ Database schema migration completed successfully!");
 		process.exit(0);
 	} catch (error) {
