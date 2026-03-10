@@ -9,6 +9,21 @@ const generateVerificationToken = () => {
 	return crypto.randomBytes(32).toString("hex");
 };
 
+const EMAIL_SEND_TIMEOUT_MS = Number(process.env.EMAIL_SEND_TIMEOUT_MS || 15000);
+
+const withTimeout = (promise, timeoutMs, context) => {
+	let timeoutId;
+	const timeoutPromise = new Promise((_, reject) => {
+		timeoutId = setTimeout(() => {
+			reject(new Error(`${context} timed out after ${timeoutMs}ms`));
+		}, timeoutMs);
+	});
+
+	return Promise.race([promise, timeoutPromise]).finally(() => {
+		if (timeoutId) clearTimeout(timeoutId);
+	});
+};
+
 /**
  * Create email transporter based on environment
  * In development: Uses Ethereal (fake SMTP for testing)
@@ -19,11 +34,17 @@ const createTransporter = async () => {
 		// Production: Use real email service
 		return nodemailer.createTransport({
 			host: process.env.SMTP_HOST,
-			port: process.env.SMTP_PORT || 587,
+			port: Number(process.env.SMTP_PORT || 587),
 			secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
 			auth: {
 				user: process.env.SMTP_USER,
 				pass: process.env.SMTP_PASS,
+			},
+			connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 10000),
+			greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 10000),
+			socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 15000),
+			tls: {
+				rejectUnauthorized: false,
 			},
 		});
 	} else {
@@ -150,7 +171,11 @@ ${frontendUrl}
 		`,
 	};
 
-	const info = await transporter.sendMail(mailOptions);
+	const info = await withTimeout(
+		transporter.sendMail(mailOptions),
+		EMAIL_SEND_TIMEOUT_MS,
+		"SMTP sendMail",
+	);
 
 	// Log email sending result
 	console.log("✅ [EMAIL] Email sent successfully:", {
