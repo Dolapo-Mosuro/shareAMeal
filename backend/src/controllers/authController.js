@@ -78,7 +78,7 @@ const login = async (req, res, next) => {
 
 		if (!email || !password) {
 			throw new AppError(
-				"Email and password are required",
+				"Email and password required",
 				400,
 				"VALIDATION_ERROR",
 			);
@@ -86,18 +86,30 @@ const login = async (req, res, next) => {
 
 		const normalizedEmail = email.toString().trim().toLowerCase();
 
-		const [users] = await pool.query("SELECT * FROM users WHERE email = ?", [
-			normalizedEmail,
-		]);
+		const queryResult = await pool.query(
+			"SELECT * FROM users WHERE email = ?",
+			[normalizedEmail],
+		);
 
-		if (users.length === 0) {
+		let users;
+
+		if (Array.isArray(queryResult)) {
+			if (Array.isArray(queryResult[0])) {
+				users = queryResult[0];
+			} else {
+				users = queryResult;
+			}
+		} else {
+			users = queryResult ? [queryResult] : [];
+		}
+
+		if (!users || users.length === 0) {
 			throw new AppError("Invalid credentials", 401, "AUTH_FAILED");
 		}
 
 		const user = users[0];
-		const isMatch = await bcrypt.compare(password, user.password);
 
-		if (!isMatch) {
+		if (!user) {
 			throw new AppError("Invalid credentials", 401, "AUTH_FAILED");
 		}
 
@@ -107,6 +119,16 @@ const login = async (req, res, next) => {
 				403,
 				"ACCOUNT_UNVERIFIED",
 			);
+		}
+
+		if (!user.password) {
+			throw new AppError("Invalid credentials", 401, "AUTH_FAILED");
+		}
+
+		const isMatch = await bcrypt.compare(password, user.password);
+
+		if (!isMatch) {
+			throw new AppError("Invalid credentials", 401, "AUTH_FAILED");
 		}
 
 		const normalizedUserRole = normalizeRole(user.role);
