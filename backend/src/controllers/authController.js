@@ -196,47 +196,43 @@ const verifyEmail = async (req, res, next) => {
 
 const resendVerification = async (req, res, next) => {
 	try {
-		const { email } = req.body;
+		const genericMessage =
+			"If an account exists with this email, a verification email has been sent.";
 
+		const { email } = req.body || {};
 		if (!email) {
-			throw new AppError("Email is required", 400, "VALIDATION_ERROR");
+			return res.status(200).json({ message: genericMessage });
 		}
 
-		const normalizedEmail = email.toString().trim().toLowerCase();
+		const normalizedEmail = String(email).trim().toLowerCase();
 
 		const [users] = await pool.query(
-			"SELECT id, name, email, is_verified FROM users WHERE email = ?",
+			"SELECT id, name, email, is_verified FROM users WHERE email = ? LIMIT 1",
 			[normalizedEmail],
 		);
 
-		if (users.length === 0) {
-			return res.json({
-				message:
-					"If an account exists with this email, a verification link has been sent.",
-			});
-		}
+		// Always respond immediately
+		res.status(200).json({ message: genericMessage });
 
-		const user = users[0];
-		const isVerified = Number(user.is_verified) === 1;
+		// Background work only
+		setImmediate(async () => {
+			try {
+				if (!users.length) return;
+				const user = users[0];
+				if (Number(user.is_verified) === 1) return;
 
-		if (isVerified) {
-			return res.json({
-				message: "This account is already verified. You can login.",
-			});
-		}
+				const token = generateVerificationToken();
+				const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-		const verificationToken = generateVerificationToken();
-		const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+				await pool.query(
+					"UPDATE users SET verification_token = ?, verification_token_expires = ? WHERE id = ?",
+					[token, expires, user.id],
+				);
 
-		await pool.query(
-			"UPDATE users SET verification_token = ?, verification_token_expires = ? WHERE id = ?",
-			[verificationToken, tokenExpires, user.id],
-		);
-
-		await sendVerificationEmail(user.email, user.name, verificationToken);
-
-		return res.json({
-			message: "Verification email sent",
+				await sendVerificationEmail(user.email, user.name, token);
+			} catch (err) {
+				console.error("RESEND_VERIFICATION_BACKGROUND_FAILED:", err.message);
+			}
 		});
 	} catch (error) {
 		next(error);
