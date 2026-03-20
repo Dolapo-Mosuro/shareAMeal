@@ -1,6 +1,11 @@
 const express = require("express");
 
-const { register, login, verifyEmail, resendVerification } = require("../controllers/authController");
+const {
+	register,
+	login,
+	verifyEmail,
+	resendVerification,
+} = require("../controllers/authController");
 const { loginLimiter } = require("../middleware/requestGuards");
 const {
 	sanitizeAuthPayload,
@@ -22,12 +27,18 @@ router.post(
 	register,
 );
 
-router.post("/login", sanitizeAuthPayload, validateUserLogin, loginLimiter, login);
+router.post(
+	"/login",
+	sanitizeAuthPayload,
+	validateUserLogin,
+	loginLimiter,
+	login,
+);
 
 // Email verification endpoint
 router.get("/verify/:token", verifyEmail);
 
 // Resend verification email
-router.post("/resend-verification", sanitizeAuthPayload, resendVerification);
+router.post("/resend-verification", resendVerification); // keep before any protected routes
 
 module.exports = router;

@@ -196,10 +196,12 @@ const verifyEmail = async (req, res, next) => {
 
 const resendVerification = async (req, res, next) => {
 	try {
-		const { email } = req.body;
+		const genericMessage =
+			"If the account exists and is unverified, a verification email has been sent.";
 
+		const { email } = req.body || {};
 		if (!email) {
-			throw new AppError("Email is required", 400, "VALIDATION_ERROR");
+			return res.status(200).json({ message: genericMessage });
 		}
 
 		const normalizedEmail = email.toString().trim().toLowerCase();
@@ -210,19 +212,13 @@ const resendVerification = async (req, res, next) => {
 		);
 
 		if (users.length === 0) {
-			return res.json({
-				message:
-					"If an account exists with this email, a verification link has been sent.",
-			});
+			return res.status(200).json({ message: genericMessage });
 		}
 
 		const user = users[0];
 		const isVerified = Number(user.is_verified) === 1;
-
 		if (isVerified) {
-			return res.json({
-				message: "This account is already verified. You can login.",
-			});
+			return res.status(200).json({ message: genericMessage });
 		}
 
 		const verificationToken = generateVerificationToken();
@@ -233,11 +229,14 @@ const resendVerification = async (req, res, next) => {
 			[verificationToken, tokenExpires, user.id],
 		);
 
-		await sendVerificationEmail(user.email, user.name, verificationToken);
+		// non-blocking email send to avoid request timeout
+		sendVerificationEmail(user.email, user.name, verificationToken).catch(
+			(err) => {
+				console.error("RESEND_VERIFICATION_EMAIL_FAILED:", err.message);
+			},
+		);
 
-		return res.json({
-			message: "Verification email sent",
-		});
+		return res.status(200).json({ message: genericMessage });
 	} catch (error) {
 		next(error);
 	}
