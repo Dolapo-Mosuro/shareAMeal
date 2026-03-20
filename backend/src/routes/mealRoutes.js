@@ -1,13 +1,12 @@
 const express = require("express");
-
 const {
 	createMeal,
 	getAllMeals,
-	getMealsByStatus,
 	getMealById,
 	getMyMeals,
 	updateMeal,
 	deleteMeal,
+	getMealsByStatus,
 } = require("../controllers/mealController");
 
 const {
@@ -15,20 +14,40 @@ const {
 	requireRole,
 	requireVerified,
 } = require("../middleware/auth");
+
 const { validateIdParam } = require("../middleware/validate");
 
 const router = express.Router();
 
-router.get("/", getAllMeals);
-
-router.get("/status/:status", getMealsByStatus);
-
-router.get("/:mealId", validateIdParam("mealId"), getMealById);
-
+/**
+ * CREATE MEAL (SME ONLY)
+ */
 router.post("/", authenticate, requireRole("sme"), requireVerified, createMeal);
 
-router.get("/my/list", authenticate, requireRole("sme"), getMyMeals);
+/**
+ * GET CURRENT USER'S MEALS (SME)
+ * ✅ MUST COME BEFORE /:mealId
+ */
+router.get("/my", authenticate, requireRole("sme"), getMyMeals);
 
+/**
+ * GET MEALS BY STATUS
+ */
+router.get("/status/:status", getMealsByStatus);
+
+/**
+ * GET ALL MEALS
+ */
+router.get("/", getAllMeals);
+
+/**
+ * GET SINGLE MEAL
+ */
+router.get("/:mealId", validateIdParam("mealId"), getMealById);
+
+/**
+ * UPDATE MEAL
+ */
 router.patch(
 	"/:mealId",
 	validateIdParam("mealId"),
@@ -37,6 +56,9 @@ router.patch(
 	updateMeal,
 );
 
+/**
+ * DELETE MEAL
+ */
 router.delete(
 	"/:mealId",
 	validateIdParam("mealId"),

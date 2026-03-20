@@ -229,8 +229,19 @@ const getMyMeals = async (req, res, next) => {
 const updateMeal = async (req, res, next) => {
 	try {
 		const { mealId } = req.params;
-
 		const { title, description, quantity, unit } = req.body;
+
+		// ✅ FIX: VALIDATION FIRST
+		if (quantity !== undefined) {
+			const numericQuantity = Number(quantity);
+
+			if (!Number.isFinite(numericQuantity) || numericQuantity <= 0) {
+				throw new AppError("Invalid quantity", 400, "VALIDATION_ERROR", {
+					field: "quantity",
+					value: quantity,
+				});
+			}
+		}
 
 		const [meals] = await pool.query(
 			"SELECT restaurant_id FROM meals WHERE id = ?",
@@ -247,46 +258,41 @@ const updateMeal = async (req, res, next) => {
 		const meal = meals[0];
 
 		if (meal.restaurant_id !== req.user.id) {
-			throw new AppError("You can only edit your own meals", 403, "FORBIDDEN", {
-				reason: "not_owner",
-			});
+			throw new AppError("Forbidden", 403, "FORBIDDEN");
 		}
 
-		const updateFields = [];
-		const updateValues = [];
+		const fields = [];
+		const values = [];
 
 		if (title !== undefined) {
-			updateFields.push("title = ?");
-			updateValues.push(title);
+			fields.push("title = ?");
+			values.push(title);
 		}
 		if (description !== undefined) {
-			updateFields.push("description = ?");
-			updateValues.push(description);
+			fields.push("description = ?");
+			values.push(description);
 		}
 		if (quantity !== undefined) {
-			updateFields.push("quantity = ?");
-			updateValues.push(quantity);
+			fields.push("quantity = ?");
+			values.push(quantity);
 		}
 		if (unit !== undefined) {
-			updateFields.push("unit = ?");
-			updateValues.push(unit);
+			fields.push("unit = ?");
+			values.push(unit);
 		}
 
-		if (updateFields.length === 0) {
+		if (fields.length === 0) {
 			throw new AppError("No fields to update", 400, "VALIDATION_ERROR");
 		}
 
-		updateValues.push(mealId);
+		values.push(mealId);
 
 		await pool.query(
-			`UPDATE meals SET ${updateFields.join(", ")} WHERE id = ?`,
-			updateValues,
+			`UPDATE meals SET ${fields.join(", ")} WHERE id = ?`,
+			values,
 		);
 
-		res.json({
-			message: "Meal updated successfully",
-			mealId,
-		});
+		res.json({ message: "Meal updated successfully" });
 	} catch (error) {
 		next(error);
 	}
