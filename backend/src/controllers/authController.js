@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto"); // <-- add
+const crypto = require("crypto");
 const pool = require("../config/db");
 const { AppError } = require("../middleware/errorHandler");
 const {
@@ -114,7 +114,8 @@ const login = async (req, res, next) => {
 			throw new AppError("Invalid credentials", 401, "AUTH_FAILED");
 		}
 
-		if (!user.is_verified) {
+		const isVerified = Number(user.is_verified) === 1;
+		if (!isVerified) {
 			throw new AppError(
 				"Account is pending verification.",
 				403,
@@ -216,8 +217,9 @@ const resendVerification = async (req, res, next) => {
 		}
 
 		const user = users[0];
+		const isVerified = Number(user.is_verified) === 1;
 
-		if (user.is_verified) {
+		if (isVerified) {
 			return res.json({
 				message: "This account is already verified. You can login.",
 			});
