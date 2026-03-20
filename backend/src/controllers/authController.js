@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto"); // <-- add
 const pool = require("../config/db");
 const { AppError } = require("../middleware/errorHandler");
 const {
@@ -23,6 +24,14 @@ const register = async (req, res, next) => {
 			);
 		}
 
+		if (password.length < 6) {
+			throw new AppError(
+				"Password must be at least 6 characters",
+				400,
+				"WEAK_PASSWORD",
+			);
+		}
+
 		const normalizedRole = normalizeRole(role);
 		if (!ALLOWED_ROLES.has(normalizedRole)) {
 			throw new AppError("Invalid role", 400, "INVALID_ROLE");
@@ -40,22 +49,19 @@ const register = async (req, res, next) => {
 		}
 
 		const hashedPassword = await bcrypt.hash(password, 10);
-		const verificationToken = generateVerificationToken();
-		const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+		const verificationToken = crypto.randomBytes(32).toString("hex");
+		const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
 		const [result] = await pool.query(
-			"INSERT INTO users (name, email, password, role, organization_name, address, phone, is_verified, verification_token, verification_token_expires) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			"INSERT INTO users (name, email, password, role, organization_name, is_verified, verification_token, verification_token_expires) VALUES (?, ?, ?, ?, ?, 0, ?, ?)",
 			[
 				name,
 				normalizedEmail,
 				hashedPassword,
 				normalizedRole, // FIX: save normalized role
 				organization_name || null,
-				address || null,
-				phone || null,
-				false,
 				verificationToken,
-				tokenExpires,
+				verificationTokenExpiry,
 			],
 		);
 
@@ -92,13 +98,8 @@ const login = async (req, res, next) => {
 		);
 
 		let users;
-
 		if (Array.isArray(queryResult)) {
-			if (Array.isArray(queryResult[0])) {
-				users = queryResult[0];
-			} else {
-				users = queryResult;
-			}
+			users = Array.isArray(queryResult[0]) ? queryResult[0] : queryResult;
 		} else {
 			users = queryResult ? [queryResult] : [];
 		}
@@ -109,7 +110,7 @@ const login = async (req, res, next) => {
 
 		const user = users[0];
 
-		if (!user) {
+		if (!user || !user.password) {
 			throw new AppError("Invalid credentials", 401, "AUTH_FAILED");
 		}
 
@@ -121,12 +122,7 @@ const login = async (req, res, next) => {
 			);
 		}
 
-		if (!user.password) {
-			throw new AppError("Invalid credentials", 401, "AUTH_FAILED");
-		}
-
 		const isMatch = await bcrypt.compare(password, user.password);
-
 		if (!isMatch) {
 			throw new AppError("Invalid credentials", 401, "AUTH_FAILED");
 		}
@@ -159,12 +155,17 @@ const verifyEmail = async (req, res, next) => {
 	try {
 		const { token } = req.params;
 
-		const [users] = await pool.query(
-			"SELECT id, email, name, is_verified, verification_token_expires FROM users WHERE verification_token = ?",
+		const [rows] = await pool.query(
+			`SELECT id, email
+             FROM users
+             WHERE verification_token = ?
+               AND verification_token_expires > NOW()
+               AND is_verified = 0
+             LIMIT 1`,
 			[token],
 		);
 
-		if (users.length === 0) {
+		if (rows.length === 0) {
 			throw new AppError(
 				"Invalid or expired verification token",
 				400,
@@ -172,25 +173,14 @@ const verifyEmail = async (req, res, next) => {
 			);
 		}
 
-		const user = users[0];
-
-		if (user.is_verified) {
-			return res.json({
-				message: "Email already verified. You can now login.",
-				alreadyVerified: true,
-			});
-		}
-
-		if (new Date() > new Date(user.verification_token_expires)) {
-			throw new AppError(
-				"Verification token has expired. Please request a new one.",
-				400,
-				"TOKEN_EXPIRED",
-			);
-		}
+		const user = rows[0];
 
 		await pool.query(
-			"UPDATE users SET is_verified = TRUE, verification_token = NULL, verification_token_expires = NULL WHERE id = ?",
+			`UPDATE users
+             SET is_verified = 1,
+                 verification_token = NULL,
+                 verification_token_expires = NULL
+             WHERE id = ?`,
 			[user.id],
 		);
 
@@ -243,8 +233,8 @@ const resendVerification = async (req, res, next) => {
 
 		await sendVerificationEmail(user.email, user.name, verificationToken);
 
-		res.json({
-			message: "Verification email sent. Please check your inbox.",
+		return res.json({
+			message: "Verification email sent",
 		});
 	} catch (error) {
 		next(error);
