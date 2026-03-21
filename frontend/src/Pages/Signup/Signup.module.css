@@ -1,76 +1,87 @@
 .signup {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--White);
-  padding: 20px;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	background-color: var(--White);
+	padding: 20px;
 }
 
 .signup h2 {
-  margin-bottom: 20px;
-  font-size: 22px;
-  font-weight: 600;
+	margin-bottom: 20px;
+	font-size: 22px;
+	font-weight: 600;
 }
 
 .shade {
-  color: var(--Green);
+	color: var(--Green);
 }
 
 .form {
-  width: 100%;
-  max-width: 350px;
-  background: var(--White);
-  padding: 25px;
-  border: 3px solid var(--Green);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+	width: 100%;
+	max-width: 350px;
+	background: var(--White);
+	padding: 25px;
+	border: 3px solid var(--Green);
+	border-radius: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 }
 
 .form input {
-  padding: 10px;
-  border: 1px solid var(--Green);
-  border-radius: 4px;
-  outline: none;
+	padding: 10px;
+	border: 1px solid var(--Green);
+	border-radius: 4px;
+	outline: none;
 }
 
 input::placeholder {
-  color: black;
-  opacity: 1;
+	color: black;
+	opacity: 1;
 }
 
 .passwordWrapper {
-  padding: 10px;
-  border: 1px solid var(--Green);
-  border-radius: 4px;
-  outline: none;
-  display: flex;
-  justify-content: space-between;
+	position: relative;
+	display: flex;
+	align-items: center;
+	padding: 10px;
+	border: 1px solid var(--Green);
+	border-radius: 4px;
+	outline: none;
 }
 
 .passwordWrapper:focus-within {
-  border: 2px solid var(--Green);
+	border: 2px solid var(--Green);
 }
 
 .passwordWrapper input {
-  width: 100%;
-  border: none;
-  padding: 0;
+	width: 100%;
+	padding-right: 2.5rem; /* space for the icon */
+	border: none;
+	padding: 0;
 }
 
 .passwordWrapper input:focus-within {
-  border: none;
+	border: none;
+}
+
+.eyeIcon {
+	position: absolute;
+	right: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	height: 100%;
 }
 
 .options {
-  padding: 10px;
-  border: 1px solid var(--Green);
-  border-radius: 4px;
-  outline: none;
-  background-color: transparent;
+	padding: 10px;
+	border: 1px solid var(--Green);
+	border-radius: 4px;
+	outline: none;
+	background-color: transparent;
 }
 
 /* .options option:hover{
@@ -83,52 +94,52 @@ input::placeholder {
 } */
 
 .form button {
-  background-color: var(--Green);
-  color: var(--White);
-  padding: 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
+	background-color: var(--Green);
+	color: var(--White);
+	padding: 10px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-weight: 500;
 }
 
 .form button:hover {
-  opacity: 0.9;
+	opacity: 0.9;
 }
 
 .form p {
-  font-size: 14px;
-  text-align: center;
+	font-size: 14px;
+	text-align: center;
 }
 
-.agree{
-  display: flex;
-  align-items: center;
-  /* gap: 4px; */
-  /* border: 2px solid green; */
+.agree {
+	display: flex;
+	align-items: center;
+	/* gap: 4px; */
+	/* border: 2px solid green; */
 }
 
-.agree input{
-  width: 1rem;
-  height: 1rem;
-  margin: 0px;
-  /* border: 2px solid red; */
+.agree input {
+	width: 1rem;
+	height: 1rem;
+	margin: 0px;
+	/* border: 2px solid red; */
 }
 
-.agree span{
-  /* border: 2px solid black; */
-  width: 100%;
-  font-size:small;
-  text-align: end;
+.agree span {
+	/* border: 2px solid black; */
+	width: 100%;
+	font-size: small;
+	text-align: end;
 }
 
 .termsWrapper label {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-   font-size: 14px; 
-  border: 2px solid var(--Error); 
- } 
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	font-size: 14px;
+	border: 2px solid var(--Error);
+}
 
 /* .termsWrapper span{
   width: 100%;
@@ -137,78 +148,76 @@ input::placeholder {
 } */
 
 .termsWrapper input {
-  margin-right: 8px;
-  accent-color: var(--Green);
-  cursor: pointer;
+	margin-right: 8px;
+	accent-color: var(--Green);
+	cursor: pointer;
 }
 
 .termsWrapper label {
-  cursor: pointer;
+	cursor: pointer;
 }
 
 .inputGroup {
-  position: relative;
-  margin-bottom: 20px;
+	position: relative;
+	margin-bottom: 20px;
 }
 
 .inputGroup input,
 .inputGroup select {
-  width: 100%;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
+	width: 100%;
+	border-radius: 6px;
+	font-size: 14px;
+	outline: none;
 }
 
-
-
 .error {
-  position: absolute;
-  left: 12px;
-  top: 90%;
-  transform: translateY(-50%);
-  color:var(--Error);
-  font-size: 12px;
-  pointer-events: none;
+	position: absolute;
+	left: 12px;
+	top: 90%;
+	transform: translateY(-50%);
+	color: var(--Error);
+	font-size: 12px;
+	pointer-events: none;
 }
 
 .statusCard {
-  margin-top: 20px;
-  width: 100%;
-  max-width: 400px;
-  background: var(--White);
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid var(--Gray);
+	margin-top: 20px;
+	width: 100%;
+	max-width: 400px;
+	background: var(--White);
+	border-radius: 12px;
+	padding: 16px;
+	border: 1px solid var(--Gray);
 }
 
 .statusCard p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  text-align: left;
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.5;
+	text-align: left;
 }
 
 .statusSuccess {
-  border-left: 4px solid var(--Green);
-  background: var(--Surface);
+	border-left: 4px solid var(--Green);
+	background: var(--Surface);
 }
 
 .statusError {
-  border-left: 4px solid var(--Error);
+	border-left: 4px solid var(--Error);
 }
 
 @media (min-width: 768px) {
-  .signup {
-    flex-direction: row;
-    justify-content: center;
-  }
+	.signup {
+		flex-direction: row;
+		justify-content: center;
+	}
 
-  .form {
-    max-width: 400px;
-    padding: 35px;
-  }
+	.form {
+		max-width: 400px;
+		padding: 35px;
+	}
 
-  .signup h2 {
-    font-size: 24px;
-  }
+	.signup h2 {
+		font-size: 24px;
+	}
 }

@@ -28,13 +28,14 @@ function Signup() {
 
 	const [serverMessage, setServerMessage] = useState("");
 	const [isSuccess, setIsSuccess] = useState(false);
-	
+
 	const [loading, setLoading] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 	const navigate = useNavigate();
 
 	const password = watch("password");
-
 
 	const onSubmit = async (data) => {
 		if (loading) return;
@@ -131,25 +132,47 @@ function Signup() {
 				</div>
 
 				<div className={styles.inputGroup}>
-					<input
-						type="password"
-						placeholder="Password"
-						{...register("password", {
-							required: true,
-							pattern: PASSWORD_REGEX,
-						})}
-					/>
+					<div className={styles.passwordWrapper}>
+						<input
+							type={showPassword ? "text" : "password"}
+							placeholder="Password"
+							{...register("password", {
+								required: true,
+								pattern: PASSWORD_REGEX,
+							})}
+						/>
+						<span
+							className={styles.eyeIcon}
+							onClick={() => setShowPassword((prev) => !prev)}
+							tabIndex={0}
+							role="button"
+							aria-label="Toggle password visibility"
+						>
+							{showPassword ? <Openeye /> : <Closedeye />}
+						</span>
+					</div>
 				</div>
 
 				<div className={styles.inputGroup}>
-					<input
-						type="password"
-						placeholder="Confirm Password"
-						{...register("confirmPassword", {
-							validate: (value) =>
-								value === password || "Passwords do not match",
-						})}
-					/>
+					<div className={styles.passwordWrapper}>
+						<input
+							type={showConfirmPassword ? "text" : "password"}
+							placeholder="Confirm Password"
+							{...register("confirmPassword", {
+								validate: (value) =>
+									value === password || "Passwords do not match",
+							})}
+						/>
+						<span
+							className={styles.eyeIcon}
+							onClick={() => setShowConfirmPassword((prev) => !prev)}
+							tabIndex={0}
+							role="button"
+							aria-label="Toggle confirm password visibility"
+						>
+							{showConfirmPassword ? <Openeye /> : <Closedeye />}
+						</span>
+					</div>
 				</div>
 
 				<button type="submit" disabled={loading}>
