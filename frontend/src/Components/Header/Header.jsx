@@ -1,16 +1,7 @@
 import styles from "./Header.module.css";
 
 export default function Header({ user }) {
-	// Fallbacks for name and role
-	const displayName =
-		user?.name ||
-		(user?.role === "ngo"
-			? "NGO Account"
-			: user?.role === "sme"
-				? "SME Account"
-				: user?.role === "sponsor"
-					? "Sponsor Account"
-					: "User");
+	const displayName = user?.name || "User";
 
 	const displayRole =
 		user?.role === "ngo"
