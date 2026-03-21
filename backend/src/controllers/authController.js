@@ -6,6 +6,8 @@ const { AppError } = require("../middleware/errorHandler");
 const {
 	generateVerificationToken,
 	sendVerificationEmail,
+	sendResetPasswordEmail,
+	sendForgotPasswordEmail,
 } = require("../utils/emailService");
 
 const normalizeRole = (value = "") => value.toString().trim().toLowerCase();
@@ -315,4 +317,9 @@ const forgotPassword = async (req, res, next) => {
 	}
 };
 
-module.exports = { register, login };
+module.exports = {
+	register,
+	login,
+	forgotPassword,
+	resetPassword,
+};

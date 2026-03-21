@@ -3,8 +3,10 @@ const express = require("express");
 const {
 	register,
 	login,
-	verifyEmail,
-	resendVerification,
+	forgotPassword,
+	resetPassword,
+	// verifyEmail,
+	// resendVerification,
 } = require("../controllers/authController");
 const { loginLimiter } = require("../middleware/requestGuards");
 const {
