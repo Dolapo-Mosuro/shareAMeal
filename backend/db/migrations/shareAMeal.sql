@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
   is_verified BOOLEAN DEFAULT FALSE,
   verification_token VARCHAR(255),
   verification_token_expires DATETIME,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  reset_token VARCHAR(255) DEFAULT NULL,
+  reset_token_expires DATETIME DEFAULT NULL
 );
 
 -- Restaurant profiles: Additional info for restaurant users

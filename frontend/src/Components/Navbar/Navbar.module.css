@@ -1,7 +1,7 @@
 .navbar {
   width: 100%;
   background-color:var(--White);
-  /* padding: 1rem 5%; */
+padding: 0rem 8rem;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -15,7 +15,8 @@
 }
 
 .logoImg {
-  height: 40px;
+  height: 70px;
+  padding: 0.5rem;
 }
 
 .desktopLinks {
