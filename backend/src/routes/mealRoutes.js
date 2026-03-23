@@ -12,7 +12,7 @@ const {
 const {
 	authenticate,
 	requireRole,
-	requireVerified,
+	// requireVerified,
 } = require("../middleware/auth");
 
 const { validateIdParam } = require("../middleware/validate");
@@ -22,7 +22,7 @@ const router = express.Router();
 /**
  * CREATE MEAL (SME ONLY)
  */
-router.post("/", authenticate, requireRole("sme"), requireVerified, createMeal);
+router.post("/", authenticate, requireRole("sme"), createMeal);
 
 /**
  * GET CURRENT USER'S MEALS (SME)

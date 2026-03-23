@@ -4,7 +4,6 @@ import NgoDash from "./Components/NgoDash/NgoDash";
 import HomePage from "./Pages/HomePage/HomePage";
 import Signup from "./Pages/Signup/Signup";
 import Login from "./Pages/Login/Login";
-import VerifyEmail from "./Pages/VerifyEmail/VerifyEmail";
 import "./Theme/Global.css";
 import { jwtDecode } from "jwt-decode";
 // import SmeDash from "./Components/SmeDash/SmeDash";
@@ -69,7 +68,6 @@ function App() {
 				<Route index element={<HomePage />} />
 				<Route path="/signup" element={<Signup />} />
 				<Route path="/login" element={<Login />} />
-				<Route path="/verify/:token" element={<VerifyEmail />} />
 				<Route
 					path="/ngo"
 					element={

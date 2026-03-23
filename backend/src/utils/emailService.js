@@ -5,9 +5,6 @@ const crypto = require("crypto");
  * Generate a random verification token
  * @returns {string} Random 32-byte hex token
  */
-const generateVerificationToken = () => {
-	return crypto.randomBytes(32).toString("hex");
-};
 
 const EMAIL_SEND_TIMEOUT_MS = Number(
 	process.env.EMAIL_SEND_TIMEOUT_MS || 15000,
@@ -63,47 +60,6 @@ const createTransporter = async () => {
 	});
 };
 
-const sendVerificationEmail = async (email, name, token) => {
-	const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-
-	const transporter = await createTransporter();
-
-	const mailOptions = {
-		from: `"Share A Meal" <${process.env.SMTP_FROM}>`,
-		to: email,
-		subject: "Verify your Share A Meal account",
-		html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #e67e22;">Welcome to Share A Meal, ${name}!</h2>
-                <p>Thank you for registering. Please verify your email address by clicking the button below:</p>
-                <a href="${verificationUrl}"
-                    style="display: inline-block; padding: 12px 24px; background-color: #e67e22; color: white; text-decoration: none; border-radius: 4px; margin: 16px 0;">
-                    Verify Email
-                </a>
-                <p>Or copy and paste this link into your browser:</p>
-                <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-                <p style="color: #999; font-size: 14px;">This link expires in 24 hours. If you did not create this account, you can safely ignore this email.</p>
-            </div>
-        `,
-		text: `Welcome to Share A Meal, ${name}!\n\nVerify your email: ${verificationUrl}\n\nThis link expires in 24 hours.`,
-	};
-
-	const sendPromise = transporter.sendMail(mailOptions);
-	const info = await withTimeout(
-		sendPromise,
-		EMAIL_SEND_TIMEOUT_MS,
-		"sendVerificationEmail",
-	);
-
-	if (process.env.USE_ETHEREAL === "true") {
-		console.log("📧 Preview URL:", nodemailer.getTestMessageUrl(info));
-	} else {
-		console.log(`✅ Verification email sent to ${email}`);
-	}
-
-	return info;
-};
-
 async function sendResetPasswordEmail(email, name, token) {
 	const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 	const transporter = await createTransporter();
@@ -134,7 +90,6 @@ async function sendResetPasswordEmail(email, name, token) {
 }
 
 module.exports = {
-	generateVerificationToken,
-	sendVerificationEmail,
+	
 	sendResetPasswordEmail,
 };

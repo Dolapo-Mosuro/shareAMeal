@@ -24,7 +24,7 @@ const getOverallMetrics = async (req, res, next) => {
 		const totalNGOs = ngosData[0].total_ngos;
 
 		const [restaurantsData] = await pool.query(
-			"SELECT COUNT(DISTINCT id) as total_restaurants FROM users WHERE role = 'sme' AND is_verified = TRUE",
+			"SELECT COUNT(DISTINCT id) as total_restaurants FROM users WHERE role = 'sme'",
 		);
 		const totalRestaurants = restaurantsData[0].total_restaurants;
 
@@ -57,19 +57,19 @@ const getSMEMetrics = async (req, res, next) => {
 	try {
 		const [metrics] = await pool.query(
 			`SELECT 
-                u.id,
-                u.organization_name,
-                COUNT(DISTINCT m.id) as meals_listed,
-                SUM(CASE WHEN m.status = 'COMPLETED' THEN 1 ELSE 0 END) as meals_completed,
-                SUM(CASE WHEN m.unit = 'kg' AND m.status != 'CANCELLED' THEN m.quantity ELSE 0 END) as kg_donated,
-                COUNT(DISTINCT c.ngo_id) as unique_ngos_served,
-                u.created_at
-            FROM users u
-            LEFT JOIN meals m ON u.id = m.restaurant_id
-            LEFT JOIN claims c ON m.id = c.meal_id AND c.status != 'CANCELLED'
-            WHERE u.role = 'sme' AND u.is_verified = TRUE
-            GROUP BY u.id
-            ORDER BY meals_completed DESC`,
+				u.id,
+				u.organization_name,
+				COUNT(DISTINCT m.id) as meals_listed,
+				SUM(CASE WHEN m.status = 'COMPLETED' THEN 1 ELSE 0 END) as meals_completed,
+				SUM(CASE WHEN m.unit = 'kg' AND m.status != 'CANCELLED' THEN m.quantity ELSE 0 END) as kg_donated,
+				COUNT(DISTINCT c.ngo_id) as unique_ngos_served,
+				u.created_at
+			FROM users u
+			LEFT JOIN meals m ON u.id = m.restaurant_id
+			LEFT JOIN claims c ON m.id = c.meal_id AND c.status != 'CANCELLED'
+			WHERE u.role = 'sme'
+			GROUP BY u.id
+			ORDER BY meals_completed DESC`,
 		);
 
 		res.json({
@@ -86,19 +86,19 @@ const getNGOMetrics = async (req, res, next) => {
 	try {
 		const [metrics] = await pool.query(
 			`SELECT 
-                u.id,
-                u.organization_name,
-                COUNT(DISTINCT c.meal_id) as meals_claimed,
-                SUM(CASE WHEN c.status = 'COMPLETED' THEN 1 ELSE 0 END) as meals_received,
-                SUM(CASE WHEN m.unit = 'kg' AND c.status = 'COMPLETED' THEN m.quantity ELSE 0 END) as kg_received,
-                COUNT(DISTINCT m.restaurant_id) as restaurants_worked_with,
-                u.created_at
-            FROM users u
-            LEFT JOIN claims c ON u.id = c.ngo_id
-            LEFT JOIN meals m ON c.meal_id = m.id
-            WHERE u.role = 'ngo' AND u.is_verified = TRUE
-            GROUP BY u.id
-            ORDER BY meals_received DESC`,
+				u.id,
+				u.organization_name,
+				COUNT(DISTINCT c.meal_id) as meals_claimed,
+				SUM(CASE WHEN c.status = 'COMPLETED' THEN 1 ELSE 0 END) as meals_received,
+				SUM(CASE WHEN m.unit = 'kg' AND c.status = 'COMPLETED' THEN m.quantity ELSE 0 END) as kg_received,
+				COUNT(DISTINCT m.restaurant_id) as restaurants_worked_with,
+				u.created_at
+			FROM users u
+			LEFT JOIN claims c ON u.id = c.ngo_id
+			LEFT JOIN meals m ON c.meal_id = m.id
+			WHERE u.role = 'ngo'
+			GROUP BY u.id
+			ORDER BY meals_received DESC`,
 		);
 
 		res.json({

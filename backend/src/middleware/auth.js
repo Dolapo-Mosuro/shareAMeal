@@ -16,7 +16,7 @@ const authenticate = catchAsync(async (req, res, next) => {
 	const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
 	const [users] = await pool.query(
-		"SELECT id, email, role, is_verified FROM users WHERE id = ?",
+		"SELECT id, email, role FROM users WHERE id = ?",
 		[decoded.id],
 	);
 
@@ -50,19 +50,6 @@ const requireRole = (...roles) => {
 	};
 };
 
-const requireVerified = (req, res, next) => {
 
-	if (!req.user.is_verified) {
-		return next(
-			new AppError(
-				"Account not verified",
-				403,
-				"NOT_VERIFIED",
-			),
-		);
-	}
-	
-	next();
-};
 
 module.exports = { authenticate, requireRole, requireVerified };
