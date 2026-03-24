@@ -194,7 +194,7 @@ describe("Auth Endpoints", () => {
 			// REMOVE old queued mockResolvedValueOnce here (if present)
 		});
 
-		beforeEach(() => {  
+		beforeEach(() => {
 			pool.query.mockReset();
 		});
 
@@ -208,7 +208,6 @@ describe("Auth Endpoints", () => {
 								email: testEmail,
 								password: hashedPassword,
 								role: "sme",
-								is_verified: 0,
 							},
 						],
 						[],
@@ -251,7 +250,6 @@ describe("Auth Endpoints", () => {
 						email: testEmail,
 						password: hashedPassword,
 						role: "sme",
-						is_verified: true,
 					},
 				],
 				undefined,
@@ -275,7 +273,6 @@ describe("Auth Endpoints", () => {
 						email: testEmail,
 						password: hashedPassword,
 						role: "sme",
-						is_verified: true,
 					},
 				],
 				undefined,
@@ -300,7 +297,7 @@ describe("Auth Endpoints", () => {
 		it.skip("verifies email with a valid token", async () => {
 			pool.query.mockImplementation(async (sql) => {
 				if (/select/i.test(sql)) {
-					return [[{ id: 1, email: "user@test.com", is_verified: 0 }], []];
+					return [[{ id: 1, email: "user@test.com", is_verified: 0 }], []]; // <-- still here, but test is skipped
 				}
 				if (/update/i.test(sql)) {
 					return [{ affectedRows: 1 }, []];

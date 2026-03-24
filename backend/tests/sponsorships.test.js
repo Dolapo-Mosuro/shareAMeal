@@ -29,25 +29,25 @@ describe("Sponsorship Endpoints", () => {
 		sponsorToken = jwt.sign(
 			{ id: sponsorUserId, email: "sponsor@test.com", role: "sponsor" },
 			process.env.JWT_SECRET,
-			{ expiresIn: process.env.JWT_EXPIRES_IN }
+			{ expiresIn: process.env.JWT_EXPIRES_IN },
 		);
 
 		adminToken = jwt.sign(
 			{ id: adminUserId, email: "admin@test.com", role: "admin" },
 			process.env.JWT_SECRET,
-			{ expiresIn: process.env.JWT_EXPIRES_IN }
+			{ expiresIn: process.env.JWT_EXPIRES_IN },
 		);
 
 		smeToken = jwt.sign(
 			{ id: smeUserId, email: "sme@test.com", role: "sme" },
 			process.env.JWT_SECRET,
-			{ expiresIn: process.env.JWT_EXPIRES_IN }
+			{ expiresIn: process.env.JWT_EXPIRES_IN },
 		);
 
 		ngoToken = jwt.sign(
 			{ id: ngoUserId, email: "ngo@test.com", role: "ngo" },
 			process.env.JWT_SECRET,
-			{ expiresIn: process.env.JWT_EXPIRES_IN }
+			{ expiresIn: process.env.JWT_EXPIRES_IN },
 		);
 
 		// Set deterministic test meal IDs
@@ -62,24 +62,72 @@ describe("Sponsorship Endpoints", () => {
 	beforeEach(() => {
 		// Reset mock calls between tests but maintain mock function
 		pool.query.mockClear();
-		
+
 		// Reset sponsorship test data for each test
 		global.mockDataStore = {
 			users: new Map([
-				[1, { id: 1, email: "sponsor@test.com", role: "sponsor", is_verified: 1 }],
-				[2, { id: 2, email: "admin@test.com", role: "admin", is_verified: 1 }],
-				[3, { id: 3, email: "sme@test.com", role: "sme", is_verified: 1 }],
-				[4, { id: 4, email: "ngo@test.com", role: "ngo", is_verified: 1 }],
+				[1, { id: 1, email: "sponsor@test.com", role: "sponsor" }],
+				[2, { id: 2, email: "admin@test.com", role: "admin" }],
+				[3, { id: 3, email: "sme@test.com", role: "sme" }],
+				[4, { id: 4, email: "ngo@test.com", role: "ngo" }],
 			]),
 			meals: new Map([
-				[100, { id: 100, title: "Test Meal 1", quantity: 10, status: "AVAILABLE", restaurant_id: 3 }],
-				[101, { id: 101, title: "Test Meal 2", quantity: 5, status: "AVAILABLE", restaurant_id: 3 }],
+				[
+					100,
+					{
+						id: 100,
+						title: "Test Meal 1",
+						quantity: 10,
+						status: "AVAILABLE",
+						restaurant_id: 3,
+					},
+				],
+				[
+					101,
+					{
+						id: 101,
+						title: "Test Meal 2",
+						quantity: 5,
+						status: "AVAILABLE",
+						restaurant_id: 3,
+					},
+				],
 			]),
 			claims: new Map(),
 			sponsorships: new Map([
-				[1, { id: 1, sponsor_id: 1, meal_id: 100, ngo_id: 4, amount: 100, created_at: new Date() }],
-				[2, { id: 2, sponsor_id: 1, meal_id: 100, ngo_id: 4, amount: 150, created_at: new Date() }],
-				[3, { id: 3, sponsor_id: 1, meal_id: 100, ngo_id: 4, amount: 250, created_at: new Date() }],
+				[
+					1,
+					{
+						id: 1,
+						sponsor_id: 1,
+						meal_id: 100,
+						ngo_id: 4,
+						amount: 100,
+						created_at: new Date(),
+					},
+				],
+				[
+					2,
+					{
+						id: 2,
+						sponsor_id: 1,
+						meal_id: 100,
+						ngo_id: 4,
+						amount: 150,
+						created_at: new Date(),
+					},
+				],
+				[
+					3,
+					{
+						id: 3,
+						sponsor_id: 1,
+						meal_id: 100,
+						ngo_id: 4,
+						amount: 250,
+						created_at: new Date(),
+					},
+				],
 			]),
 		};
 
@@ -87,32 +135,80 @@ describe("Sponsorship Endpoints", () => {
 		pool.query.mockImplementation(async (query, params) => {
 			const store = global.mockDataStore;
 			const numParam = Number(params[0]);
-			
-			// Auth query: SELECT id, email, role, is_verified FROM users WHERE id = ?
-			if (query.includes("SELECT id, email, role, is_verified FROM users") && query.includes("WHERE id")) {
+
+			// Auth query: SELECT id, email, role FROM users WHERE id = ?
+			if (
+				query.includes("SELECT id, email, role FROM users") &&
+				query.includes("WHERE id")
+			) {
 				const user = store.users.get(parseInt(numParam));
 				if (!user) return [[], undefined];
-				return [[{ id: user.id, email: user.email, role: user.role, is_verified: user.is_verified }], undefined];
+				return [
+					[
+						{
+							id: user.id,
+							email: user.email,
+							role: user.role,
+						},
+					],
+					undefined,
+				];
 			}
 
 			// Handle donor/sponsor impact metrics user queries
-			if (query.includes("SELECT id, name, organization_name, role FROM users WHERE id = ?")) {
+			if (
+				query.includes(
+					"SELECT id, name, organization_name, role FROM users WHERE id = ?",
+				)
+			) {
 				if (numParam === 99999) return [[], undefined];
-				return [[{ id: numParam || 1, name: "Test User", organization_name: "Test Org", role: "sponsor" }], undefined];
+				return [
+					[
+						{
+							id: numParam || 1,
+							name: "Test User",
+							organization_name: "Test Org",
+							role: "sponsor",
+						},
+					],
+					undefined,
+				];
 			}
 
 			// Handle NGO queries - SELECT id, role FROM users WHERE id = ? AND role = 'ngo'
 			if (query.includes("FROM users") && query.includes("role = 'ngo'")) {
 				const user = store.users.get(numParam);
 				if (!user || user.role !== "ngo") return [[], undefined];
-				return [[{ id: user.id, organization_name: user.email.split("@")[0] + " Org", role: user.role }], undefined];
+				return [
+					[
+						{
+							id: user.id,
+							organization_name: user.email.split("@")[0] + " Org",
+							role: user.role,
+						},
+					],
+					undefined,
+				];
 			}
 
 			// Handle organization name queries for NGOs
-			if (query.includes("SELECT id, organization_name, role FROM users WHERE id = ?")) {
+			if (
+				query.includes(
+					"SELECT id, organization_name, role FROM users WHERE id = ?",
+				)
+			) {
 				const user = store.users.get(numParam);
 				if (!user) return [[], undefined];
-				return [[{ id: user.id, organization_name: user.email.split("@")[0] + " Org", role: user.role }], undefined];
+				return [
+					[
+						{
+							id: user.id,
+							organization_name: user.email.split("@")[0] + " Org",
+							role: user.role,
+						},
+					],
+					undefined,
+				];
 			}
 
 			// Handle meal lookup for getMealSponsors - SELECT id, title, status FROM meals WHERE id = ?
@@ -120,15 +216,30 @@ describe("Sponsorship Endpoints", () => {
 				if (numParam === 99999 || !numParam) return [[], undefined];
 				const meal = store.meals.get(numParam);
 				if (!meal) return [[], undefined];
-				return [[{ id: meal.id, title: meal.title, status: meal.status }], undefined];
+				return [
+					[{ id: meal.id, title: meal.title, status: meal.status }],
+					undefined,
+				];
 			}
 
 			// Handle meal restaurant_id lookup
-			if (query.includes("SELECT id, restaurant_id FROM meals WHERE id = ?") || query.includes("SELECT id, created_by FROM meals WHERE id = ?")) {
+			if (
+				query.includes("SELECT id, restaurant_id FROM meals WHERE id = ?") ||
+				query.includes("SELECT id, created_by FROM meals WHERE id = ?")
+			) {
 				if (numParam === 99999) return [[], undefined];
 				const meal = store.meals.get(numParam);
 				if (!meal) return [[], undefined];
-				return [[{ id: meal.id, restaurant_id: meal.restaurant_id, created_by: meal.restaurant_id }], undefined];
+				return [
+					[
+						{
+							id: meal.id,
+							restaurant_id: meal.restaurant_id,
+							created_by: meal.restaurant_id,
+						},
+					],
+					undefined,
+				];
 			}
 
 			// Handle meal queries with joins (alias m)
@@ -136,14 +247,19 @@ describe("Sponsorship Endpoints", () => {
 				if (numParam === 99999) return [[], undefined];
 				const meal = store.meals.get(numParam);
 				if (!meal) return [[], undefined];
-				return [[{
-					id: meal.id,
-					title: meal.title,
-					quantity: meal.quantity,
-					status: meal.status,
-					restaurant_id: meal.restaurant_id,
-					restaurant_name: "Test SME",
-				}], undefined];
+				return [
+					[
+						{
+							id: meal.id,
+							title: meal.title,
+							quantity: meal.quantity,
+							status: meal.status,
+							restaurant_id: meal.restaurant_id,
+							restaurant_name: "Test SME",
+						},
+					],
+					undefined,
+				];
 			}
 
 			// Handle SUM/COUNT queries for metrics
@@ -156,11 +272,17 @@ describe("Sponsorship Endpoints", () => {
 				return [[{ sponsorship_count: store.sponsorships.size }], undefined];
 			}
 			if (query.includes("SELECT COUNT(DISTINCT meal_id)")) {
-				const uniqueMeals = new Set(Array.from(store.sponsorships.values()).map(s => s.meal_id));
+				const uniqueMeals = new Set(
+					Array.from(store.sponsorships.values()).map((s) => s.meal_id),
+				);
 				return [[{ meals_sponsored: uniqueMeals.size }], undefined];
 			}
 			if (query.includes("SELECT COUNT(DISTINCT ngo_id)")) {
-				const uniqueNgos = new Set(Array.from(store.sponsorships.values()).filter(s => s.ngo_id).map(s => s.ngo_id));
+				const uniqueNgos = new Set(
+					Array.from(store.sponsorships.values())
+						.filter((s) => s.ngo_id)
+						.map((s) => s.ngo_id),
+				);
 				return [[{ ngos_supported: uniqueNgos.size }], undefined];
 			}
 
@@ -181,52 +303,76 @@ describe("Sponsorship Endpoints", () => {
 			}
 
 			// Get sponsorships by sponsor with JOIN - WHERE s.sponsor_id = ?
-			if (query.includes("FROM sponsorships s") && query.includes("WHERE s.sponsor_id = ?")) {
+			if (
+				query.includes("FROM sponsorships s") &&
+				query.includes("WHERE s.sponsor_id = ?")
+			) {
 				const sponsorId = parseInt(params[0]);
-				const sponsorshipsForSponsor = Array.from(store.sponsorships.values()).filter(s => s.sponsor_id === sponsorId);
-				return [sponsorshipsForSponsor.map(s => ({
-					id: s.id,
-					sponsor_id: s.sponsor_id,
-					meal_id: s.meal_id,
-					ngo_id: s.ngo_id,
-					amount: s.amount,
-					note: s.note,
-					created_at: s.created_at,
-					meal_title: "Test Meal",
-					meal_status: "AVAILABLE",
-					ngo_name: "Test NGO Org",
-					ngo_id_alt: s.ngo_id,
-				})), undefined];
+				const sponsorshipsForSponsor = Array.from(
+					store.sponsorships.values(),
+				).filter((s) => s.sponsor_id === sponsorId);
+				return [
+					sponsorshipsForSponsor.map((s) => ({
+						id: s.id,
+						sponsor_id: s.sponsor_id,
+						meal_id: s.meal_id,
+						ngo_id: s.ngo_id,
+						amount: s.amount,
+						note: s.note,
+						created_at: s.created_at,
+						meal_title: "Test Meal",
+						meal_status: "AVAILABLE",
+						ngo_name: "Test NGO Org",
+						ngo_id_alt: s.ngo_id,
+					})),
+					undefined,
+				];
 			}
 
 			// Get sponsorships by meal with JOIN - WHERE s.meal_id = ?
-			if (query.includes("FROM sponsorships s") && query.includes("WHERE s.meal_id = ?")) {
+			if (
+				query.includes("FROM sponsorships s") &&
+				query.includes("WHERE s.meal_id = ?")
+			) {
 				const mealId = parseInt(params[0]);
-				const sponsorshipsForMeal = Array.from(store.sponsorships.values()).filter(s => s.meal_id === mealId);
-				return [sponsorshipsForMeal.map(s => ({
-					id: s.id,
-					sponsor_id: s.sponsor_id,
-					amount: s.amount,
-					note: s.note,
-					created_at: s.created_at,
-					sponsor_name: "Test Sponsor",
-					sponsor_org: "Test Org",
-				})), undefined];
+				const sponsorshipsForMeal = Array.from(
+					store.sponsorships.values(),
+				).filter((s) => s.meal_id === mealId);
+				return [
+					sponsorshipsForMeal.map((s) => ({
+						id: s.id,
+						sponsor_id: s.sponsor_id,
+						amount: s.amount,
+						note: s.note,
+						created_at: s.created_at,
+						sponsor_name: "Test Sponsor",
+						sponsor_org: "Test Org",
+					})),
+					undefined,
+				];
 			}
 
 			// Get sponsorships by NGO with JOIN - WHERE s.ngo_id = ?
-			if (query.includes("FROM sponsorships s") && query.includes("WHERE s.ngo_id = ?")) {
+			if (
+				query.includes("FROM sponsorships s") &&
+				query.includes("WHERE s.ngo_id = ?")
+			) {
 				const ngoId = parseInt(params[0]);
-				const sponsorshipsForNgo = Array.from(store.sponsorships.values()).filter(s => s.ngo_id === ngoId);
-				return [sponsorshipsForNgo.map(s => ({
-					id: s.id,
-					sponsor_id: s.sponsor_id,
-					amount: s.amount,
-					note: s.note,
-					created_at: s.created_at,
-					sponsor_name: "Test Sponsor",
-					sponsor_org: "Test Org",
-				})), undefined];
+				const sponsorshipsForNgo = Array.from(
+					store.sponsorships.values(),
+				).filter((s) => s.ngo_id === ngoId);
+				return [
+					sponsorshipsForNgo.map((s) => ({
+						id: s.id,
+						sponsor_id: s.sponsor_id,
+						amount: s.amount,
+						note: s.note,
+						created_at: s.created_at,
+						sponsor_name: "Test Sponsor",
+						sponsor_org: "Test Org",
+					})),
+					undefined,
+				];
 			}
 
 			// Get sponsorships by sponsor ID (no WHERE clause, just IN params)
@@ -356,9 +502,7 @@ describe("Sponsorship Endpoints", () => {
 			expect(response.body.code).toBe("FORBIDDEN");
 		});
 
-		test("Should prevent sponsor from sponsoring their own meal (if sponsor is also SME)", async () => {
-
-		});
+		test("Should prevent sponsor from sponsoring their own meal (if sponsor is also SME)", async () => {});
 	});
 
 	describe("GET /sponsorships/my", () => {
@@ -379,29 +523,14 @@ describe("Sponsorship Endpoints", () => {
 			const newSponsorToken = jwt.sign(
 				{ id: newSponsorId, email: "newsponsor@test.com", role: "sponsor" },
 				process.env.JWT_SECRET,
-				{ expiresIn: process.env.JWT_EXPIRES_IN }
+				{ expiresIn: process.env.JWT_EXPIRES_IN },
 			);
 
-			// Mock user query for the new sponsor
-			pool.query.mockImplementation(async (query, params) => {
-				if (query.includes("SELECT id, email, role, is_verified FROM users")) {
-					const userId = params[0];
-					if (userId === newSponsorId) {
-						return [[{ id: newSponsorId, email: "newsponsor@test.com", role: "sponsor", is_verified: 1 }], undefined];
-					}
-				}
-				// Handle sponsorship queries for new sponsor (empty result)
-				else if (query.includes("SELECT") && query.includes("sponsorship")) {
-					return [[], undefined];
-				}
-				// Fallback to default user handling
-				else if (query.includes("SELECT id, email, role, is_verified FROM users")) {
-					const userId = params[0];
-					if (userId === 1) {
-						return [[{ id: 1, email: "sponsor@test.com", role: "sponsor", is_verified: 1 }], undefined];
-					}
-				}
-				return [[], undefined];
+			// Add the new sponsor to the mock users map
+			global.mockDataStore.users.set(newSponsorId, {
+				id: newSponsorId,
+				email: "newsponsor@test.com",
+				role: "sponsor",
 			});
 
 			const response = await request(app)
@@ -472,7 +601,7 @@ describe("Sponsorship Endpoints", () => {
 			);
 
 			expect(response.status).toBe(200);
-			
+
 			expect(response.body.totalSponsored).toBeGreaterThanOrEqual(100);
 		});
 
@@ -528,7 +657,7 @@ describe("Sponsorship Endpoints", () => {
 			);
 
 			expect(response.status).toBe(200);
-			
+
 			expect(response.body.totalSponsored).toBeGreaterThanOrEqual(500);
 		});
 
@@ -555,10 +684,7 @@ describe("Sponsorship Endpoints", () => {
 		});
 
 		test("Should fail when user is not an NGO", async () => {
-			
-			const response = await request(app).get(
-				`/sponsorships/ngos/${1}`, 
-			);
+			const response = await request(app).get(`/sponsorships/ngos/${1}`);
 
 			expect([404, 400]).toContain(response.status);
 		});
@@ -571,7 +697,7 @@ describe("Sponsorship Endpoints", () => {
 			);
 
 			expect(response.status).toBe(200);
-			
+
 			expect(response.body).toBeDefined();
 		});
 

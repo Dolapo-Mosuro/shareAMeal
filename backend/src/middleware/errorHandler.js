@@ -5,26 +5,27 @@ class AppError extends Error {
 		this.status = "error";
 		this.code = code;
 		this.details = details;
-		this.isOperational = true; 
+		this.isOperational = true;
 		Error.captureStackTrace(this, this.constructor);
 	}
 }
 
 const errorHandler = (err, req, res, next) => {
-	 
 	err.statusCode = err.statusCode || 500;
 	err.status = err.status || "error";
 	err.code =
 		err.code || (err.statusCode === 500 ? "INTERNAL_ERROR" : "UNKNOWN_ERROR");
 
-	console.error("ERROR 💥:", {
-		message: err.message,
-		statusCode: err.statusCode,
-		stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
-		timestamp: new Date().toISOString(),
-		path: req.path,
-		method: req.method,
-	});
+	if (process.env.NODE_ENV !== "test") {
+		console.error("ERROR 💥:", {
+			message: err.message,
+			statusCode: err.statusCode,
+			stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+			timestamp: new Date().toISOString(),
+			path: req.originalUrl,
+			method: req.method,
+		});
+	}
 
 	const baseResponse = {
 		status: err.status,
@@ -65,11 +66,10 @@ const errorHandler = (err, req, res, next) => {
 };
 
 const handleMySQLError = (err) => {
-	
 	if (err.code === "ER_DUP_ENTRY") {
 		const field = err.message.match(/for key '(.+?)'/)?.[1] || "field";
 		const message = `Duplicate value for ${field}. This ${field} already exists.`;
-		return new AppError(message, 409, "ER_DUP_ENTRY", { field }); 
+		return new AppError(message, 409, "ER_DUP_ENTRY", { field });
 	}
 
 	if (err.code === "ER_NO_REFERENCED_ROW_2") {
@@ -140,35 +140,25 @@ const errorConverter = (err, req, res, next) => {
 		console.log("RAW ERROR DEBUG:", error);
 		if (error.code?.startsWith("ER_")) {
 			error = handleMySQLError(error);
-		}
-		
-		else if (error.type === "entity.parse.failed") {
+		} else if (error.type === "entity.parse.failed") {
 			error = new AppError("Invalid JSON payload", 400, "INVALID_JSON");
-		}
-		
-		else if (error.name === "JsonWebTokenError") {
+		} else if (error.name === "JsonWebTokenError") {
 			error = handleJWTError();
 		} else if (error.name === "TokenExpiredError") {
 			error = handleJWTExpiredError();
-		}
-		
-		else if (error.code) {
+		} else if (error.code) {
 			const systemError = handleSystemError(error);
 			if (systemError) {
 				error = systemError;
 			}
-		}
-		
-		else if (error.name === "ValidationError") {
+		} else if (error.name === "ValidationError") {
 			error = new AppError(
 				error.message,
 				400,
 				"VALIDATION_ERROR",
 				error.errors || error.details,
 			);
-		}
-		
-		else {
+		} else {
 			error = new AppError(
 				error.message || "Internal server error",
 				500,
