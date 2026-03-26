@@ -11,6 +11,10 @@ import DashLayout from "./Components/DashLayout/DashLayout";
 import Sponsor from "./Pages/Sponsor/Sponsor";
 import ForgotPassword from "./Pages/ForgotPassword/ForgotPassword";
 import ResetPassword from "./Pages/ResetPassword/ResetPassword";
+import NgoLayout from "./Components/NgoDash/NgoLayout";
+import Browse from "./Pages/Ngo/Browse";
+import Reserve from "./Pages/Ngo/Reserve";
+import Pickup from "./Pages/Ngo/Pickup";
 
 const getDefaultRouteByRole = (role) => {
 	switch ((role || "").toLowerCase()) {
@@ -72,10 +76,15 @@ function App() {
 					path="/ngo"
 					element={
 						<ProtectedRoute allowedRoles={["ngo"]}>
-							<NgoDash />
+							<NgoLayout />
 						</ProtectedRoute>
 					}
-				/>
+				>
+					<Route index element={<NgoDash />} />
+					<Route path="browse" element={<Browse />} />
+					<Route path="reserve" element={<Reserve />} />
+					<Route path="pickup" element={<Pickup />} />
+				</Route>
 				<Route
 					path="/sponsor"
 					element={

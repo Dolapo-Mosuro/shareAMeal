@@ -87,7 +87,6 @@
 	outline: none;
 	border: 1px solid var(--Green);
 	box-shadow: 0 0 0 2px rgba(128, 255, 0, 0.2);
-
 }
 
 .actionBtn {
@@ -113,4 +112,41 @@
 	background: #f0fff3;
 	padding: 15px;
 	border-radius: 8px;
+}
+
+.statusBadge {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	color: #fff;
+	font-size: 0.85rem;
+	margin-left: 8px;
+	vertical-align: middle;
+}
+
+.mealHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.deleteBtn {
+	background: #e74c3c;
+	color: #fff;
+	border: none;
+	padding: 8px 12px;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-top: 10px;
+}
+
+.deleteBtn:focus,
+.deleteBtn:hover {
+	background: #c0392b;
+}
+
+.infoText {
+	color: #888;
+	font-size: 0.95rem;
+	margin-top: 10px;
 }

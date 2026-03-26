@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../NgoDash/NgoDash.module.css";
 import { apiRequest } from "../../api";
-import NgoNavbar from "./NgoNavbar";
 
 export default function NgoDash() {
 	const [ngo, setNgo] = useState(null);
@@ -202,6 +201,7 @@ export default function NgoDash() {
 					</li>
 				</ul>
 			</section>
+			<h2>Hello, {ngo?.name || "NGO"} 👋</h2>
 		</div>
 	);
 }

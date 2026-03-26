@@ -1,70 +1,78 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { 
-  FaThLarge, FaSearch, FaRegFileAlt, 
-  FaTruck, FaComments, FaCog, 
-  FaSignOutAlt, FaTimes 
-} from "react-icons/fa";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import styles from "./SideBar.module.css";
+import { FaBars, FaTimes, FaSignOutAlt } from "react-icons/fa";
 
-const Sidebar = ({ isMobileOpen, closeSidebar }) => {
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("orgName");
-    navigate("/login");
-  };
-
-  const menuItems = [
-    { name: "Dashboard", path: "/ngo", icon: <FaThLarge /> },
-    { name: "Browse Food", path: "/browse", icon: <FaSearch /> },
-    { name: "Reserve", path: "/reserve", icon: <FaRegFileAlt /> },
-    { name: "Pickup", path: "/pickup", icon: <FaTruck /> },
-    { name: "Messages", path: "/messages", icon: <FaComments />, badge: 3 },
-    { name: "Settings", path: "/settings", icon: <FaCog /> },
-  ];
-
-  return (
-    <>
-      {/* 1. Backdrop Overlay: Only visible on mobile when sidebar is open */}
-      {isMobileOpen && <div className={styles.overlay} onClick={closeSidebar}></div>}
-
-      {/* 2. Sidebar Container */}
-      <aside className={`${styles.sidebar} ${isMobileOpen ? styles.mobileOpen : ""}`}>
-        <div className={styles.logoArea}>
-          <div className={styles.logoIcon}>🍽️</div>
-          <span className={styles.logoText}>Share A Meal</span>
-          
-          {/* Mobile Only: Close Button */}
-          <button className={styles.closeBtn} onClick={closeSidebar}>
-            <FaTimes />
-          </button>
-        </div>
-
-        <nav className={styles.nav}>
-          {menuItems.map((item) => (
-            <NavLink 
-              key={item.name} 
-              to={item.path} 
-              className={({ isActive }) => isActive ? styles.active : styles.link}
-              onClick={closeSidebar} // Close sidebar when a link is clicked on mobile
-            >
-              {item.icon}
-              <span className={styles.linkText}>{item.name}</span>
-              {item.badge && <span className={styles.badge}>{item.badge}</span>}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className={styles.footer}>
-          <button className={styles.logoutBtn} onClick={handleLogout}>
-            <FaSignOutAlt /> <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-    </>
-  );
+const menuConfig = {
+	ngo: [
+		{ label: "Dashboard", icon: "🏠", path: "/ngo" },
+		{ label: "Browse Food", icon: "🔍", path: "/ngo/browse" },
+		{ label: "Reserve", icon: "📝", path: "/ngo/reserve" },
+		{ label: "Pickup", icon: "🚚", path: "/ngo/pickup" },
+		{ label: "Messages", icon: "💬", path: "/ngo/messages", badge: 3 },
+		{ label: "Settings", icon: "⚙️", path: "/ngo/settings" },
+	],
+	sme: [
+		{ label: "Dashboard", icon: "🏠", path: "/sme" },
+		{ label: "Meals", icon: "🍽️", path: "/sme/meals" },
+		{ label: "Messages", icon: "💬", path: "/sme/messages" },
+		{ label: "Settings", icon: "⚙️", path: "/sme/settings" },
+	],
 };
 
-export default Sidebar;
+export default function SideBar({ userType, isMobileOpen, closeSidebar }) {
+	const [collapsed, setCollapsed] = useState(false);
+	const navigate = useNavigate();
+	const location = useLocation();
+
+	const handleLogout = () => {
+		localStorage.clear();
+		navigate("/login");
+	};
+
+	const menu = menuConfig[userType] || [];
+
+	return (
+		<aside
+			className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""} ${isMobileOpen ? styles.mobileOpen : ""}`}
+		>
+			<div className={styles.top}>
+				<button
+					className={styles.collapseBtn}
+					onClick={() => setCollapsed((c) => !c)}
+				>
+					{collapsed ? <FaBars /> : <FaTimes />}
+				</button>
+				<span className={styles.logo}>{!collapsed && "Share A Meal"}</span>
+			</div>
+			<nav className={styles.menu}>
+				{menu.map((item) => (
+					<div
+						key={item.label}
+						className={`${styles.menuItem} ${location.pathname.startsWith(item.path) ? styles.active : ""}`}
+						onClick={() => {
+							navigate(item.path);
+							if (isMobileOpen) closeSidebar();
+						}}
+					>
+						<span className={styles.icon}>{item.icon}</span>
+						{!collapsed && (
+							<>
+								<span>{item.label}</span>
+								{item.badge && (
+									<span className={styles.badge}>{item.badge}</span>
+								)}
+							</>
+						)}
+					</div>
+				))}
+			</nav>
+			<div className={styles.logoutSection}>
+				<button className={styles.logoutBtn} onClick={handleLogout}>
+					<FaSignOutAlt />
+					{!collapsed && "Logout"}
+				</button>
+			</div>
+		</aside>
+	);
+}
