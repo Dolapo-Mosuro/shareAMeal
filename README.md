@@ -195,7 +195,10 @@ See `/backend/docs/` for detailed guides:
 3. Set environment variables
 4. Deploy
 
-See `backend/docs/RENDER_DEPLOYMENT_GUIDE.md`
+- Backend service: deployed and running on Render
+- Frontend service: deployed and running on Vercel
+
+See `backend/docs/RENDER_DEPLOYMENT_GUIDE.md`, `DEPLOYMENT_GUIDE.md`, and `DEPLOYMENT_TESTING.md`
 
 ### Option 2: Railway
 
@@ -230,4 +233,19 @@ MIT License - See LICENSE file
 
 ---
 
-**Status:** ✅ Backend: Production Ready (v2.0.0) | 🚀 Frontend: In Development
+## 🤖 AI / ML Features
+
+- Predicts meal food status via `/api/ai/meal/:mealId/predict`
+- Integrated with FastAPI ML service and backend AI controller
+
+## 🎨 UX Improvements
+
+- refined forms for Login/Signup error visuals
+- improved label/color contrast and responsive spacing
+
+## 🔄 Audit & Security
+
+- `npm audit fix --force` applied; Vite upgraded to 8.0.3
+- Ongoing dependency updates recommended for security
+
+**Status:** ✅ Backend: Production Ready (v2.0.0) | ✅ Frontend: Production Ready (Vercel)
