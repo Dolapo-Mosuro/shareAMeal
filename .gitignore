@@ -4,9 +4,11 @@
 .env.*.local
 .env.test
 backend/.env
+backend/.env.production
 frontend/.env
 backend/.env.local
 frontend/.env.local
+*.pem
 
 # Dependencies
 node_modules/

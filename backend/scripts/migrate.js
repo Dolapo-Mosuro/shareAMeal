@@ -4,7 +4,14 @@ const mysql = require("mysql2/promise");
 const fs = require("fs");
 const path = require("path");
 
-require("dotenv").config();
+require("dotenv").config({
+	path:
+		process.env.NODE_ENV === "test"
+			? ".env.test"
+			: process.env.NODE_ENV === "production"
+				? ".env.production"
+				: ".env",
+});
 
 async function ensureUsersVerificationColumns(connection) {
 	const [columns] = await connection.query(
