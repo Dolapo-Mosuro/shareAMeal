@@ -1,5 +1,12 @@
 const cors = require("cors");
 
+const normalizeOrigin = (origin) => origin?.trim().replace(/\/$/, "");
+
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
+	.split(",")
+	.map(normalizeOrigin)
+	.filter(Boolean);
+
 const allowedOrigins = [
 	"http://localhost:3000",
 	"http://localhost:5173",
@@ -7,14 +14,17 @@ const allowedOrigins = [
 	"https://sharemeals.vercel.app",
 	"https://shareameal-api.vercel.app",
 	"https://shareameal-api.onrender.com",
-	process.env.FRONTEND_URL,
+	normalizeOrigin(process.env.FRONTEND_URL),
+	...configuredOrigins,
 ].filter(Boolean);
 
 module.exports = () =>
 	cors({
 		origin: (origin, callback) => {
 			if (!origin) return callback(null, true);
-			if (allowedOrigins.includes(origin)) return callback(null, true);
+			if (allowedOrigins.includes(normalizeOrigin(origin))) {
+				return callback(null, true);
+			}
 			if (typeof origin === "string" && origin.endsWith(".vercel.app")) {
 				return callback(null, true);
 			}
