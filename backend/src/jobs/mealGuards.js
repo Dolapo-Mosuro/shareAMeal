@@ -2,7 +2,6 @@ const pool = require("../config/db");
 
 const logMealStatusChange = async (mealId, fromStatus, toStatus, note) => {
 	try {
-		
 		await pool.query(
 			"INSERT INTO meal_logs (meal_id, changed_by_id, from_status, to_status, note) VALUES (?, ?, ?, ?, ?)",
 			[mealId, null, fromStatus, toStatus, note],
@@ -14,16 +13,14 @@ const logMealStatusChange = async (mealId, fromStatus, toStatus, note) => {
 
 const autoExpireMeals = async () => {
 	try {
-
 		const [mealsToExpire] = await pool.query(
 			`SELECT id, status FROM meals 
              WHERE expiry_at IS NOT NULL 
-             AND expiry_at < NOW()
+			AND expiry_at < CURRENT_TIMESTAMP
              AND status IN ('AVAILABLE', 'CLAIMED')`,
 		);
 
 		for (const meal of mealsToExpire) {
-			
 			await pool.query("UPDATE meals SET status = ? WHERE id = ?", [
 				"EXPIRED",
 				meal.id,
@@ -49,7 +46,6 @@ const autoExpireMeals = async () => {
 					"Auto-expired: expiry time passed",
 				);
 			} else {
-				
 				await logMealStatusChange(
 					meal.id,
 					"AVAILABLE",
@@ -71,18 +67,16 @@ const autoExpireMeals = async () => {
 
 const autoCancelExpiredClaims = async () => {
 	try {
-
 		const [claimsToCancel] = await pool.query(
 			`SELECT c.id, c.meal_id FROM claims c
              JOIN meals m ON c.meal_id = m.id
              WHERE c.status = 'ACTIVE'
              AND c.picked_up_at IS NULL
-             AND TIMESTAMPDIFF(MINUTE, c.claimed_at, NOW()) > 30
+			AND c.claimed_at < CURRENT_TIMESTAMP - INTERVAL '30 minutes'
              AND m.status IN ('CLAIMED', 'PICKUP_READY')`,
 		);
 
 		for (const claim of claimsToCancel) {
-			
 			await pool.query("UPDATE claims SET status = ? WHERE id = ?", [
 				"CANCELLED",
 				claim.id,
@@ -115,15 +109,13 @@ const autoCancelExpiredClaims = async () => {
 
 const autoCancelStalePickupReadyMeals = async () => {
 	try {
-		
 		const [mealsToCancel] = await pool.query(
 			`SELECT m.id, m.status FROM meals m
              WHERE m.status = 'PICKUP_READY'
-             AND TIMESTAMPDIFF(HOUR, m.updated_at, NOW()) > 2`,
+			AND m.updated_at < CURRENT_TIMESTAMP - INTERVAL '2 hours'`,
 		);
 
 		for (const meal of mealsToCancel) {
-			
 			await pool.query("UPDATE meals SET status = ? WHERE id = ?", [
 				"CANCELLED",
 				meal.id,

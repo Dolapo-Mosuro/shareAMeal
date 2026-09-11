@@ -172,9 +172,9 @@ const getAverageCompletionTime = async (req, res, next) => {
 	try {
 		const [avgTime] = await pool.query(
 			`SELECT 
-                AVG(TIMESTAMPDIFF(HOUR, m.prepared_at, c.completed_at)) as avg_hours,
-                MIN(TIMESTAMPDIFF(HOUR, m.prepared_at, c.completed_at)) as min_hours,
-                MAX(TIMESTAMPDIFF(HOUR, m.prepared_at, c.completed_at)) as max_hours
+				AVG(EXTRACT(EPOCH FROM (c.completed_at - m.prepared_at)) / 3600) as avg_hours,
+				MIN(EXTRACT(EPOCH FROM (c.completed_at - m.prepared_at)) / 3600) as min_hours,
+				MAX(EXTRACT(EPOCH FROM (c.completed_at - m.prepared_at)) / 3600) as max_hours
             FROM claims c
             JOIN meals m ON c.meal_id = m.id
             WHERE c.status = 'COMPLETED' AND c.completed_at IS NOT NULL`,

@@ -4,9 +4,9 @@
 	"main": "index.js",
 	"scripts": {
 		"dev": "nodemon src/app.js",
-		"start": "npm run migrate-prod || true && node src/app.js",
+		"start": "npm run migrate-prod && node src/app.js",
 		"migrate": "node scripts/migrate.js",
-		"migrate-prod": "NODE_ENV=production node scripts/migrate.js",
+		"migrate-prod": "cross-env NODE_ENV=production node scripts/migrate.js",
 		"sync-v2": "node scripts/sync-to-v2.js",
 		"test": "jest --detectOpenHandles --forceExit",
 		"test:watch": "jest --watch",
@@ -37,8 +37,8 @@
 		"express-rate-limit": "^8.2.1",
 		"helmet": "^8.1.0",
 		"jsonwebtoken": "^9.0.3",
-		"mysql2": "^3.17.2",
 		"nodemailer": "^8.0.2",
+		"pg": "^8.23.0",
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1"
 	},

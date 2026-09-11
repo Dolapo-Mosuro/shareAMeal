@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const mysql = require("mysql2/promise");
+const { Client } = require("pg");
 const fs = require("fs");
 const path = require("path");
 
@@ -14,11 +14,11 @@ require("dotenv").config({
 });
 
 async function ensureUsersVerificationColumns(connection) {
-	const [columns] = await connection.query(
-		`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'`,
+	const { rows: columns } = await connection.query(
+		`SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users'`,
 	);
 
-	const existing = new Set(columns.map((row) => row.COLUMN_NAME));
+	const existing = new Set(columns.map((row) => row.column_name));
 	const alterParts = [];
 
 	if (!existing.has("is_verified")) {
@@ -30,7 +30,7 @@ async function ensureUsersVerificationColumns(connection) {
 	}
 
 	if (!existing.has("verification_token_expires")) {
-		alterParts.push("ADD COLUMN verification_token_expires DATETIME");
+		alterParts.push("ADD COLUMN verification_token_expires TIMESTAMP");
 	}
 
 	if (alterParts.length === 0) {
@@ -48,49 +48,29 @@ async function runMigration() {
 
 	try {
 		console.log("🔄 Starting database migration...");
-		console.log(
-			`📍 Connecting to ${process.env.DB_HOST}:${process.env.DB_PORT || 3306}`,
-		);
+		const config = process.env.DATABASE_URL
+			? {
+					connectionString: process.env.DATABASE_URL,
+					ssl:
+						process.env.DB_SSL === "false"
+							? false
+							: { rejectUnauthorized: false },
+				}
+			: {
+					host: process.env.DB_HOST || "localhost",
+					port: process.env.DB_PORT || 5432,
+					user: process.env.DB_USER || "postgres",
+					password: process.env.DB_PASSWORD || process.env.DB_PASS || "",
+					database: process.env.DB_NAME || "sharemeal",
+					ssl:
+						process.env.DB_SSL === "true"
+							? { rejectUnauthorized: false }
+							: false,
+				};
 
-		const config = {
-			host: process.env.DB_HOST || "localhost",
-			port: process.env.DB_PORT || 3306,
-			user: process.env.DB_USER || "root",
-			password: process.env.DB_PASSWORD || process.env.DB_PASS || "",
-		};
-
-		if (process.env.DB_SSL === "true") {
-			config.ssl = {
-				rejectUnauthorized: true,
-			};
-			if (process.env.DB_CA_CERT) {
-				config.ssl.ca = process.env.DB_CA_CERT;
-				console.log("🔐 Using CA certificate from environment variable");
-			} else {
-				console.warn(
-					"⚠️  DB_SSL=true but no DB_CA_CERT provided. Connection may fail if certificate validation is required.",
-				);
-			}
-		}
-
-		// ✅ Create connection FIRST
-		connection = await mysql.createConnection(config);
-
-		console.log(
-			"✅ Connected to MySQL (SSL: " +
-				(process.env.DB_SSL === "true" ? "enabled" : "disabled") +
-				")",
-		);
-
-		// ✅ Now we can query
-		const [rows] = await connection.query("SELECT DATABASE() as db");
-		console.log("Current database after connection:", rows[0].db);
-
-		const dbName = process.env.DB_NAME || "sharemeal";
-		console.log(`📦 Creating database '${dbName}' if not exists...`);
-		await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
-		await connection.query(`USE \`${dbName}\``);
-		console.log(`✅ Using database '${dbName}'`);
+		connection = new Client(config);
+		await connection.connect();
+		console.log("✅ Connected to PostgreSQL");
 
 		const schemaPath = path.join(__dirname, "../db/migrations/shareAMeal.sql");
 
@@ -112,11 +92,7 @@ async function runMigration() {
 				await connection.query(statement);
 			} catch (error) {
 				// Allow idempotent re-runs for tables/indexes that already exist
-				if (
-					error.code === "ER_TABLE_EXISTS_ERROR" ||
-					error.code === "ER_DUP_KEYNAME" ||
-					(error.message && error.message.includes("already exists"))
-				) {
+				if (error.code === "42P07" || error.code === "42710") {
 					console.warn(
 						"Skipping migration statement because object already exists:",
 						statement,
@@ -131,16 +107,23 @@ async function runMigration() {
 		// Backfill verification columns when deploying to existing databases.
 		await ensureUsersVerificationColumns(connection);
 
-		const [tables] = await connection.query("SHOW TABLES");
+		const { rows: tables } = await connection.query(
+			"SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
+		);
 		console.log(
 			"📋 Tables in current database:",
-			tables.map((row) => Object.values(row)[0]),
+			tables.map((row) => row.tablename),
 		);
 
 		console.log("✅ Database schema migration completed successfully!");
 		process.exit(0);
 	} catch (error) {
-		console.error("❌ Migration failed:", error.message);
+		console.error("❌ Migration failed:", {
+			message: error.message || "No error message returned",
+			code: error.code,
+			detail: error.detail,
+			hint: error.hint,
+		});
 		process.exit(1);
 	} finally {
 		if (connection) {

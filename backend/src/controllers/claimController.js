@@ -321,7 +321,7 @@ const confirmPickup = async (req, res, next) => {
 		}
 
 		await pool.query(
-			"UPDATE claims SET status = ?, picked_up_at = NOW() WHERE id = ?",
+			"UPDATE claims SET status = ?, picked_up_at = CURRENT_TIMESTAMP WHERE id = ?",
 			["ACTIVE", claimId],
 		);
 
@@ -405,7 +405,7 @@ const confirmCompletion = async (req, res, next) => {
 		}
 
 		await pool.query(
-			"UPDATE claims SET status = ?, completed_at = NOW() WHERE id = ?",
+			"UPDATE claims SET status = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?",
 			["COMPLETED", claimId],
 		);
 

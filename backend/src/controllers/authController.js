@@ -4,7 +4,6 @@ const crypto = require("crypto");
 const pool = require("../config/db");
 const { AppError } = require("../middleware/errorHandler");
 
-
 const normalizeRole = (value = "") => value.toString().trim().toLowerCase();
 const ALLOWED_ROLES = new Set(["sme", "ngo", "sponsor"]);
 
@@ -47,7 +46,7 @@ const register = async (req, res, next) => {
 
 		const hashedPassword = await bcrypt.hash(password, 10);
 		const [result] = await pool.query(
-			"INSERT INTO users (name, email, password, role, organization_name) VALUES (?, ?, ?, ?, ?)",
+			"INSERT INTO users (name, email, password, role, organization_name) VALUES (?, ?, ?, ?, ?) RETURNING id",
 			[
 				name,
 				normalizedEmail,
@@ -57,14 +56,11 @@ const register = async (req, res, next) => {
 			],
 		);
 
-		
 		res.status(201).json({
 			message: "User registered successfully",
 			userId: result.insertId,
 			note: "Please check your email to verify your account. The verification link expires in 24 hours.",
 		});
-
-		
 	} catch (error) {
 		next(error);
 	}
@@ -134,7 +130,6 @@ const login = async (req, res, next) => {
 	}
 };
 
-
 const resetPassword = async (req, res, next) => {
 	try {
 		const { token, password } = req.body;
@@ -142,7 +137,7 @@ const resetPassword = async (req, res, next) => {
 			return res.status(400).json({ message: "Token and password required" });
 
 		const [users] = await pool.query(
-			"SELECT id FROM users WHERE reset_token = ? AND reset_token_expires > NOW()",
+			"SELECT id FROM users WHERE reset_token = ? AND reset_token_expires > CURRENT_TIMESTAMP",
 			[token],
 		);
 

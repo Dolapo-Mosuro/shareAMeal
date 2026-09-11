@@ -1,2 +1,19 @@
+.env.production
+.env
+.env.local
+.env.*.local
 
-backend/.env
+node_modules/
+npm-debug.log*
+
+coverage/
+.nyc_output/
+test_output.txt
+coverage-output.txt
+
+*.log
+*.tmp
+
+# Local Docker and downloaded ML artifacts
+.docker/
+*.pkl
