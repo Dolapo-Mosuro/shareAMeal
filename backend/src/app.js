@@ -57,11 +57,6 @@ app.use(
  */
 const corsMiddleware = require("./config/cors")();
 app.use(corsMiddleware);
-app.options("/{*any}", corsMiddleware);
-app.use((req, res, next) => {
-	if (req.method === "OPTIONS") return res.sendStatus(204);
-	next();
-});
 
 /**
  * Body parsing
