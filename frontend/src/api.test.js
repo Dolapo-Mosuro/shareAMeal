@@ -1,4 +1,4 @@
-import { apiRequest } from "./api";
+import { apiRequest, resolveApiUrl } from "./api";
 import { vi } from "vitest";
 
 // Mock fetch globally
@@ -58,5 +58,13 @@ describe("apiRequest", () => {
 		await apiRequest("/auth-endpoint");
 		const callArgs = global.fetch.mock.calls[0][1];
 		expect(callArgs.headers.Authorization).toBe("Bearer test-token");
+	});
+});
+
+describe("resolveApiUrl", () => {
+	it("replaces the obsolete Render hostname", () => {
+		expect(resolveApiUrl("https://sharemeal-api.onrender.com/")).toBe(
+			"https://shareameal-api.onrender.com",
+		);
 	});
 });
